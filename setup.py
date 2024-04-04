@@ -16,7 +16,7 @@ def get_version(rel_path):
     
 setup(
     name='easy-cv-dataset',
-    version=get_version("easy_cv_dataset/__init__.py",
+    version=get_version("easy_cv_dataset/__init__.py"),
     description='A library for dataset loading',
     url='https://github.com/davin11/easy-cv-dataset',
     author='davin11',
@@ -28,7 +28,7 @@ setup(
     python_requires=">=3.9",
     install_requires=['keras-cv==0.8.2', ],
     classifiers=[
-        "Development Status :: 1 - Planning',
+        "Development Status :: 1 - Planning",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
