@@ -26,7 +26,11 @@ setup(
     license="Apache License 2.0",
     packages=['easy_cv_dataset', ],
     python_requires=">=3.9",
-    install_requires=['keras-cv==0.8.2', ],
+    install_requires=[
+        'keras-cv==0.8.2',
+        'pandas>=2.0.0',
+        'pycocotools>=2.0.4',
+    ],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Programming Language :: Python :: 3",
