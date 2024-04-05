@@ -18,31 +18,24 @@
 import os
 import pandas
 import numpy as np
-import tensorflow.compat.v2 as tf
+from keras.utils.module_utils import tensorflow as tf
+#import tensorflow.compat.v2 as tf
 from functools import partial
 from PIL import Image
 import keras
-from keras.utils import dataset_utils
-from keras.utils import image_utils
+from .utils import dataframe_from_directory
+from .utils import dataset_from_dataframe
 from keras_cv import bounding_box
-from keras_cv.layers.preprocessing.base_image_augmentation_layer import IMAGES
-from keras_cv.layers.preprocessing.base_image_augmentation_layer import LABELS
 from keras_cv.layers.preprocessing.base_image_augmentation_layer import (
-    BOUNDING_BOXES,
+    IMAGES, LABELS, BOUNDING_BOXES, KEYPOINTS, SEGMENTATION_MASKS
 )
-from keras_cv.layers.preprocessing.base_image_augmentation_layer import (
-    KEYPOINTS,
-)
-from keras_cv.layers.preprocessing.base_image_augmentation_layer import (
-    SEGMENTATION_MASKS,
-)
-from keras_cv.layers.preprocessing import Rescaling
+from keras_cv.layers import Rescaling
 
-ALLOWLIST_FORMATS = (".bmp", ".gif", ".jpeg", ".jpg", ".png")
+ALLOW_LIST_FORMATS = (".bmp", ".tiff", ".tif", ".jpeg", ".jpg", ".png")
 
 
-def dataframe_from_directory(
-    directory, formats=ALLOWLIST_FORMATS, follow_links=False
+def image_dataframe_from_directory(
+    directory, follow_links=False
 ):
     """Generates a `pandas.DataFrame` from image files in a directory.
 
@@ -62,8 +55,7 @@ def dataframe_from_directory(
     return a `pandas.DataFrame` that yields batches of
     images from the subdirectories `class_a` and `class_b`.
 
-    Supported image formats: jpeg, png, bmp, gif.
-    Animated gifs are truncated to the first frame.
+    Supported image formats: jpeg, png, bmp, tiff.
 
     Args:
       directory: Directory where the data is located.
@@ -74,17 +66,13 @@ def dataframe_from_directory(
       A `pandas.DataFrame` object.
 
     """
-    image_paths, labels, class_names = dataset_utils.index_directory(
-        directory,
-        labels="inferred",
-        formats=formats,
-        shuffle=False,
-        follow_links=follow_links,
+    return dataframe_from_directory(
+        directory=directory,
+        formats=ALLOW_LIST_FORMATS,
+        colname_file="image",
+        colname_class="class",
+        follow_links=follow_links
     )
-    dataframe = pandas.DataFrame(
-        {"image": image_paths, "class": [class_names[_] for _ in labels]}
-    )
-    return dataframe
 
 
 def _load_img(path, num_channels=3):
@@ -108,8 +96,18 @@ def _load_map(path, class_mode, num_classes):
     if class_mode == "binary":
         y = tf.cast(y, tf.float32) / 255.0
         y = tf.expand_dims(y, -1)
+    elif class_mode == "int":
+        y = tf.cast(y, "int64")
     elif class_mode == "categorical":
         y = tf.one_hot(y, num_classes)
+    elif class_mode == "raw":
+        y = tf.cast(y, "float32")
+    else:
+        raise ValueError(
+            "`class_mode` argument must be "
+            'one of "int", "binary", "categorical", or "raw". '
+            f"Received: class_mode={class_mode}"
+        )
     return y
 
 
@@ -139,144 +137,32 @@ def _get_fun_load_class(x, class_mode, num_classes):
             f"Received: class_mode={class_mode}"
         )
 
-
-def _get_fun_load_bounding_box(
-    x, bounding_box_input_format, bounding_box_format, class_mode, num_classes
-):
-    x = {
-        "boxes": tf.cast(x["boxes"], "float32"),
-        "classes": _get_fun_load_class(
-            x["classes"], class_mode=class_mode, num_classes=num_classes
-        ),
-    }
-    x = bounding_box.convert_format(
-        x,
-        source=bounding_box_input_format,
-        target=bounding_box_format,
-        dtype="float32",
-    )
-    return x
-
-
-def dataset_from_dataframe(
-    dataframe,
-    colname_input,
-    colname_target,
-    load_fun_input,
-    load_fun_target,
-    shuffle=False,
-    buffer_shuffle_size=None,
-    seed=None,
-    pre_batching_processing=None,
-    batch_size=None,
-    post_batching_processing=None,
-    dictname_input=IMAGES,
-    dictname_target=None,
-    dict_to_tuple=True,
-    max_boxes=None,
-):
-    if seed is None:
-        seed = np.random.randint(1e6)
-    if dictname_input is None:
-        dictname_input = colname_input
-    if dictname_target is None:
-        dictname_target = colname_target
-
-    if isinstance(dataframe, str):
-        dataframe = pandas.read_csv(dataframe)
-
-    if isinstance(dataframe, tf.data.Dataset):
-        dataset = dataframe
-        num_elements = dataframe.cardinality()
-    else:
-        dataset = tf.data.Dataset.from_tensor_slices(
-            {
-                colname_input: dataframe[colname_input],
-                colname_target: dataframe[colname_target],
-            }
-        )
-        num_elements = len(dataframe[colname_input])
-
-    if shuffle:
-        if buffer_shuffle_size is None:
-            if batch_size is not None:
-                buffer_shuffle_size = 10 * batch_size
-            elif num_elements > 3:
-                buffer_shuffle_size = num_elements // 4
-            else:
-                buffer_shuffle_size = 1024
-        print("shuffling with buffer_size %d" % buffer_shuffle_size)
-        dataset = dataset.shuffle(
-            buffer_size=buffer_shuffle_size,
-            seed=seed,
-            reshuffle_each_iteration=True,
-        )
-
-    dataset = dataset.map(
-        lambda x: {
-            dictname_input: load_fun_input(x[colname_input]),
-            dictname_target: load_fun_target(x[colname_target]),
-        }
-    )
-
-    # for a in dataset.take(9):
-    #    for k in a:
-    #        print(k, a[k])
-
-    if pre_batching_processing is not None:
-        dataset = dataset.map(
-            pre_batching_processing, num_parallel_calls=tf.data.AUTOTUNE
-        )
-
-    if batch_size is not None:
-        try:
-            dataset = dataset.ragged_batch(batch_size)
-            # dataset = dataset.batch(batch_size)
-        except:
-            dataset = dataset.apply(
-                tf.data.experimental.dense_to_ragged_batch(batch_size)
-            )
-
-    if post_batching_processing is not None:
-        dataset = dataset.map(
-            post_batching_processing, num_parallel_calls=tf.data.AUTOTUNE
-        )
-
-    if dict_to_tuple:
-        dataset = dataset.map(
-            lambda x: _dict_to_tuple_fun(
-                x, dictname_input, dictname_target, max_boxes=max_boxes
-            )
-        )
-
-    dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    return dataset
-
-
 def image_classification_dataset_from_dataframe(
     dataframe,
-    root_path="./",
+    root_path=None,
+    shuffle=True,
+    seed=None,
     class_names=None,
     class_mode="categorical",
     color_mode="rgb",
-    batch_size=None,
-    shuffle=True,
-    seed=None,
     pre_batching_processing=None,
+    do_normalization=False,
+    batch_size=None,
     post_batching_processing=None,
-    include_rescaling=False,
     colname_image="image",
     colname_class="class",
 ):
     """Generates a `tf.data.Dataset` from a dataframe.
 
     Then calling `image_dataset_from_dataframe(dataframe)`
-    will return a `tf.data.Dataset` that yields batches of
-    images from the subdirectories `class_a` and `class_b`, together with labels
-    0 and 1 (0 corresponding to `class_a` and 1 corresponding to `class_b`).
+    will return a `tf.data.Dataset`.
 
     Args:
-      dataframe: Dataframe with list of images.    
+      dataframe: Dataframe with list of images.
+      root_path: if it is not None, all paths are relative to it.
+      shuffle: Whether to shuffle the data. Default: True.
+          If set to False, sorts the data in alphanumeric order.
+      seed: Optional random seed for shuffling and transformations.
       class_mode: String describing the encoding of classes. Options are:
           - 'raw': means that the classes are not encoded
           - 'int': means that the classes are encoded as integers
@@ -287,26 +173,25 @@ def image_classification_dataset_from_dataframe(
           - None (no labels).
       class_names: Only valid if "class_mode" is 'int' or 'categorical'. This is the explicit
           list of class names used for the encoding.
-          (otherwise alphanumerical order is used).
+          (otherwise alphanumeric order is used).
       color_mode: One of "grayscale", "rgb", "rgba". Default: "rgb".
           Whether the images will be converted to
           have 1, 3, or 4 channels.
-      batch_size: Size of the batches of data. Default: 32.
+      pre_batching_processing: The operation(s) to apply before the data is put into a batch.
+      do_normalization: If True, normalize the image in the range [0,1].
+      batch_size: Size of the batches of data. Default: None.
         If `None`, the data will not be batched
         (the dataset will yield individual samples).
-      shuffle: Whether to shuffle the data. Default: True.
-          If set to False, sorts the data in alphanumeric order.
-      seed: Optional random seed for shuffling and transformations.
-      pre_batching_processing: The operation(s) to apply before the data is put into a batch.      
       post_batching_processing: The operation(s) to apply after tha data has been batched.
+      colname_image: column name for image file. Default: 'image'.
+      colname_class:: column name for class. Default: 'class'.
     Returns:
       A `tf.data.Dataset` object.
 
     Rules regarding labels format:
 
-      - if `class_mode` is `int`, the labels are an `int32` tensor of shape
-        `(batch_size,)`.
-      - if `class_mode` is `raw`, the classes are converted.
+      - if `class_mode` is `int`, the labels are an `int32` tensor of shape `(batch_size,)`.
+      - if `class_mode` is `raw`, the classes are not converted.
       - if `class_mode` is `categorical`, the labels are a `float32` tensor
         of shape `(batch_size, num_classes)`, representing a one-hot
         encoding of the class index.
@@ -320,6 +205,8 @@ def image_classification_dataset_from_dataframe(
       - if `color_mode` is `rgba`,
         there are 4 channels in the image tensors.
     """
+    if seed is None:
+        seed = np.random.randint(1e6)
 
     if isinstance(dataframe, str):
         dataframe = pandas.read_csv(dataframe)
@@ -376,7 +263,7 @@ def image_classification_dataset_from_dataframe(
 
     load_fun_input = partial(_load_img, num_channels=num_channels)
 
-    if include_rescaling:
+    if do_normalization:
         if post_batching_processing is None:
             post_batching_processing = Rescaling(1 / 255.0)
         else:
@@ -384,10 +271,16 @@ def image_classification_dataset_from_dataframe(
                 layers=[post_batching_processing, Rescaling(1 / 255.0)]
             )
 
-    if shuffle:
-        if seed is None:
-            seed = np.random.randint(1e6)
-        dataframe = dataframe.sample(frac=1, random_state=seed)
+    if post_batching_processing is None:
+        post_batching_processing = lambda x: _dict_to_tuple_fun(
+            x, dictname_input, dictname_target, #max_boxes=max_boxes
+        )
+    else:
+        post_batching_processing = keras.Sequential(
+            layers=[post_batching_processing, lambda x: _dict_to_tuple_fun(
+            x, dictname_input, dictname_target, #max_boxes=max_boxes
+            ), ]
+        )
 
     dataset = dataset_from_dataframe(
         dataframe=dataframe,
@@ -397,12 +290,11 @@ def image_classification_dataset_from_dataframe(
         load_fun_target=load_fun_target,
         shuffle=shuffle,
         seed=seed,
-        pre_batching_processing=pre_batching_processing,
+        pre_batching_operation=pre_batching_processing,
         batch_size=batch_size,
-        post_batching_processing=post_batching_processing,
+        post_batching_operation=post_batching_processing,
         dictname_input=IMAGES,
         dictname_target=LABELS,
-        dict_to_tuple=True,
     )
 
     # Users may need to reference `class_names`, `batch_size` and `root_path`
@@ -415,27 +307,31 @@ def image_classification_dataset_from_dataframe(
 def image_segmentation_dataset_from_dataframe(
     dataframe,
     class_names,
-    root_path="./",
-    class_mode="categorical",
-    color_mode="rgb",
-    batch_size=None,
+    root_path=None,
     shuffle=True,
     seed=None,
+    class_mode="categorical",
+    color_mode="rgb",
     pre_batching_processing=None,
+    do_normalization=False,
+    batch_size=None,
     post_batching_processing=None,
-    include_rescaling=False,
     colname_image="image",
     colname_mask="segmentation_mask",
 ):
     """Generates a `tf.data.Dataset` from a dataframe.
 
-    Calling `image_dataset_from_dataframe(dataframe)`
+    Calling `image_segmentation_dataset_from_dataframe(dataframe)`
     will return a `tf.data.Dataset` that yields batches of
     images from the subdirectories `class_a` and `class_b`, together with labels
     0 and 1 (0 corresponding to `class_a` and 1 corresponding to `class_b`).
 
     Args:
-      dataframe: Dataframe with list of images.    
+      dataframe: Dataframe with list of images.
+      root_path: if it is not None, all paths are relative to it.
+      shuffle: Whether to shuffle the data. Default: True.
+          If set to False, sorts the data in alphanumeric order.
+      seed: Optional random seed for shuffling and transformations.
       class_mode: String describing the encoding of classes. Options are:
           - 'int': means that the classes are encoded as integers
               (e.g. for `sparse_categorical_crossentropy` loss).
@@ -443,19 +339,19 @@ def image_segmentation_dataset_from_dataframe(
               encoded as a categorical vector
               (e.g. for `categorical_crossentropy` loss).
       class_names: Only valid if "class_mode" is 'int' or 'categorical'. This is the explicit
-          list of class names esed for the encoding.
-          (otherwise alphanumerical order is used).
+          list of class names used for the encoding.
+          (otherwise alphanumeric order is used).
       color_mode: One of "grayscale", "rgb", "rgba". Default: "rgb".
           Whether the images will be converted to
           have 1, 3, or 4 channels.
-      batch_size: Size of the batches of data. Default: 32.
+      pre_batching_processing: The operation(s) to apply before the data is put into a batch.
+      do_normalization: If True, normalize the image in the range [0,1].
+      batch_size: Size of the batches of data. Default: None.
         If `None`, the data will not be batched
         (the dataset will yield individual samples).
-      shuffle: Whether to shuffle the data. Default: True.
-          If set to False, sorts the data in alphanumeric order.
-      seed: Optional random seed for shuffling and transformations.
-      pre_batching_processing: The operation(s) to apply before the data is put into a batch.      
       post_batching_processing: The operation(s) to apply after tha data has been batched.
+      colname_image: column name for image file. Default: 'image'.
+      colname_mask: column name for mask file. Default: 'segmentation_mask'.
     Returns:
       A `tf.data.Dataset` object.
 
@@ -477,6 +373,8 @@ def image_segmentation_dataset_from_dataframe(
       - if `color_mode` is `rgba`,
         there are 4 channels in the image tensors.
     """
+    if seed is None:
+        seed = np.random.randint(1e6)
 
     if isinstance(dataframe, str):
         dataframe = pandas.read_csv(dataframe)
@@ -509,7 +407,7 @@ def image_segmentation_dataset_from_dataframe(
 
     load_fun_input = partial(_load_img, num_channels=num_channels)
 
-    if include_rescaling:
+    if do_normalization:
         if post_batching_processing is None:
             post_batching_processing = Rescaling(1 / 255.0)
         else:
@@ -517,10 +415,16 @@ def image_segmentation_dataset_from_dataframe(
                 layers=[post_batching_processing, Rescaling(1 / 255.0)]
             )
 
-    if shuffle:
-        if seed is None:
-            seed = np.random.randint(1e6)
-        dataframe = dataframe.sample(frac=1, random_state=seed)
+    if post_batching_processing is None:
+        post_batching_processing = lambda x: _dict_to_tuple_fun(
+            x, dictname_input, dictname_target, #max_boxes=max_boxes
+        )
+    else:
+        post_batching_processing = keras.Sequential(
+            layers=[post_batching_processing, lambda x: _dict_to_tuple_fun(
+            x, dictname_input, dictname_target, #max_boxes=max_boxes
+            ), ]
+        )
 
     dataset = dataset_from_dataframe(
         dataframe=dataframe,
@@ -530,12 +434,11 @@ def image_segmentation_dataset_from_dataframe(
         load_fun_target=load_fun_target,
         shuffle=shuffle,
         seed=seed,
-        pre_batching_processing=pre_batching_processing,
+        pre_batching_operation=pre_batching_processing,
         batch_size=batch_size,
-        post_batching_processing=post_batching_processing,
+        post_batching_operation=post_batching_processing,
         dictname_input=IMAGES,
         dictname_target=SEGMENTATION_MASKS,
-        dict_to_tuple=True,
     )
 
     # Users may need to reference `class_names`, `batch_size` and `root_path`
@@ -546,7 +449,7 @@ def image_segmentation_dataset_from_dataframe(
 
 
 def _get_objdetect_generator(
-    dataframe, colname_image, colname_class, colname_box
+    dataframe, colname_image, colname_class, colname_box, class_mode, num_classes
 ):
     list_img = list(set(dataframe[colname_image]))
     for image in list_img:
@@ -554,24 +457,25 @@ def _get_objdetect_generator(
         yield {
             IMAGES: image,
             BOUNDING_BOXES: {
-                "boxes": sel[colname_box].values,
-                "classes": sel[colname_class].values,
+                "boxes": tf.cast(sel[colname_box].values, "float32"),
+                "classes": _get_fun_load_class(sel[colname_class].values, class_mode=class_mode, num_classes=num_classes),
             },
         }
+
 
 
 def image_objdetect_dataset_from_dataframe(
     dataframe,
     root_path=None,
+    shuffle=True,
+    seed=None,
     class_names=None,
     class_mode="int",
     color_mode="rgb",
-    batch_size=None,
-    shuffle=True,
-    seed=None,
     pre_batching_processing=None,
+    do_normalization=False,
+    batch_size=None,
     post_batching_processing=None,
-    include_rescaling=False,
     colname_image="image",
     colname_class="class",
     colname_box=["xmin", "ymin", "xmax", "ymax"],
@@ -587,7 +491,11 @@ def image_objdetect_dataset_from_dataframe(
     0 and 1 (0 corresponding to `class_a` and 1 corresponding to `class_b`).
 
     Args:
-      dataframe: Dataframe with list of images.    
+      dataframe: Dataframe with list of images.
+      root_path: if it is not None, all paths are relative to it.
+      shuffle: Whether to shuffle the data. Default: True.
+          If set to False, sorts the data in alphanumeric order.
+      seed: Optional random seed for shuffling and transformations.
       class_mode: String describing the encoding of classes. Options are:
           - 'raw': means that the classes are not encoded
           - 'int': means that the classes are encoded as integers
@@ -597,19 +505,20 @@ def image_objdetect_dataset_from_dataframe(
               (e.g. for `categorical_crossentropy` loss).
           - None (no labels).
       class_names: Only valid if "class_mode" is 'int' or 'categorical'. This is the explicit
-          list of class names esed for the encoding.
-          (otherwise alphanumerical order is used).
+          list of class names used for the encoding.
+          (otherwise alphanumeric order is used).
       color_mode: One of "grayscale", "rgb", "rgba". Default: "rgb".
           Whether the images will be converted to
           have 1, 3, or 4 channels.
+      pre_batching_processing: The operation(s) to apply before the data is put into a batch.
+      do_normalization: If True, normalize the image in the range [0,1].
       batch_size: Size of the batches of data. Default: 32.
         If `None`, the data will not be batched
         (the dataset will yield individual samples).
-      shuffle: Whether to shuffle the data. Default: True.
-          If set to False, sorts the data in alphanumeric order.
-      seed: Optional random seed for shuffling and transformations.
-      pre_batching_processing: The operation(s) to apply before the data is put into a batch.      
       post_batching_processing: The operation(s) to apply after tha data has been batched.
+      colname_image: column name for image file. Default: 'image'.
+      colname_class: column name for class. Default: 'class'.
+      colname_box: column names for box position. Default: ["xmin", "ymin", "xmax", "ymax"].
     Returns:
       A `tf.data.Dataset` object.
 
@@ -678,16 +587,14 @@ def image_objdetect_dataset_from_dataframe(
         )
 
     load_fun_input = partial(_load_img, num_channels=num_channels)
-
     load_fun_target = partial(
-        _get_fun_load_bounding_box,
-        bounding_box_input_format=bounding_box_input_format,
-        bounding_box_format=bounding_box_format,
-        class_mode=class_mode,
-        num_classes=num_classes,
+        bounding_box.convert_format,
+        source=bounding_box_input_format,
+        target=bounding_box_format,
+        dtype="float32",
     )
 
-    if include_rescaling:
+    if do_normalization:
         if post_batching_processing is None:
             post_batching_processing = Rescaling(1 / 255.0)
         else:
@@ -695,12 +602,25 @@ def image_objdetect_dataset_from_dataframe(
                 layers=[post_batching_processing, Rescaling(1 / 255.0)]
             )
 
-    list_img = list(set(dataframe[colname_image]))
-    num_img = len(list_img)
+    if post_batching_processing is None:
+        post_batching_processing = lambda x: _dict_to_tuple_fun(
+            x, dictname_input, dictname_target, max_boxes=max_boxes
+        )
+    else:
+        post_batching_processing = keras.Sequential(
+            layers=[post_batching_processing, lambda x: _dict_to_tuple_fun(
+            x, dictname_input, dictname_target, max_boxes=max_boxes
+            ), ]
+        )
+
     if shuffle:
         if seed is None:
             seed = np.random.randint(1e6)
-        np.random.RandomState(seed).shuffle(list_img)
+        dataframe = dataframe.sample(frac=1, random_state=seed)
+
+    num_img = len(set(dataframe[colname_image]))
+    class_dtype = "int64" if class_mode in {"int", "categorical"} else "float32"
+    class_shape = (None,num_classes) if class_mode in {"categorical", } else (None,)
 
     generator = partial(
         _get_objdetect_generator,
@@ -708,6 +628,8 @@ def image_objdetect_dataset_from_dataframe(
         colname_image=colname_image,
         colname_class=colname_class,
         colname_box=colname_box,
+        class_mode=class_mode,
+        num_classes=num_classes,
     )
 
     dataset = tf.data.Dataset.from_generator(
@@ -716,7 +638,7 @@ def image_objdetect_dataset_from_dataframe(
             IMAGES: tf.TensorSpec(shape=(), dtype="string"),
             BOUNDING_BOXES: {
                 "boxes": tf.TensorSpec(shape=(None, 4), dtype="float32"),
-                "classes": tf.TensorSpec(shape=(None,), dtype="float32"),
+                "classes": tf.TensorSpec(shape=class_shape, dtype=class_dtype),
             },
         },
     )
@@ -730,13 +652,11 @@ def image_objdetect_dataset_from_dataframe(
         load_fun_target=load_fun_target,
         shuffle=shuffle,
         seed=seed,
-        pre_batching_processing=pre_batching_processing,
+        pre_batching_operation=pre_batching_processing,
         batch_size=batch_size,
-        post_batching_processing=post_batching_processing,
+        post_batching_operation=post_batching_processing,
         dictname_input=IMAGES,
         dictname_target=BOUNDING_BOXES,
-        dict_to_tuple=True,
-        max_boxes=max_boxes,
     )
 
     # Users may need to reference `class_names`, `batch_size` and `root_path`
