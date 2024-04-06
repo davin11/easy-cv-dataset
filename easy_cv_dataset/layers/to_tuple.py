@@ -32,8 +32,8 @@ class ToTuple(keras.layers.Layer):
         self.max_boxes = max_boxes
 
     def call(self, dat):
-        x = dat[dictname_input]
-        y = dat[dictname_target]
-        if dictname_target == BOUNDING_BOXES:
-            y = bounding_box.to_dense(y, max_boxes=max_boxes)
+        x = dat[self.dictname_input]
+        y = dat[self.dictname_target]
+        if self.dictname_target == BOUNDING_BOXES:
+            y = bounding_box.to_dense(y, max_boxes=self.max_boxes)
         return x, y

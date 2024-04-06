@@ -17,12 +17,8 @@ import tensorflow as tf
 from tensorflow import keras
 
 from keras_cv import bounding_box
-from keras_cv.layers.preprocessing.base_image_augmentation_layer import (
-    BaseImageAugmentationLayer,
-)
-from keras_cv.layers.preprocessing.random_affine_transf import (
-    process_segmentation_masks,
-)
+from keras_cv.layers import BaseImageAugmentationLayer
+from .random_affine_transf import process_segmentation_masks
 
 # In order to support both unbatched and batched inputs, the horizontal
 # and verticle axis is reverse indexed
@@ -30,7 +26,6 @@ H_AXIS = -3
 W_AXIS = -2
 
 
-@keras.utils.register_keras_serializable(package="keras_cv")
 class CentralCrop(BaseImageAugmentationLayer):
     """A preprocessing layer which central crops images during training.
     During training, The layer will crop all the images at the center.
@@ -73,7 +68,18 @@ class CentralCrop(BaseImageAugmentationLayer):
         self.bounding_box_format = bounding_box_format
         self.segmentation_classes = segmentation_classes
 
-    def get_random_transformation(self, image=None, **kwargs):
+    def get_config(self):
+        config = {
+            "height": self.height,
+            "width": self.width,
+            "bounding_box_format": self.bounding_box_format,
+            "segmentation_classes": self.segmentation_classes,
+        }
+        base_config = super().get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+
+    def get_random_transformation(self, image, **kwargs):
         image_shape = tf.shape(image)
         h_diff = image_shape[H_AXIS] - self.height
         w_diff = image_shape[W_AXIS] - self.width
@@ -166,15 +172,6 @@ class CentralCrop(BaseImageAugmentationLayer):
     def augment_label(self, label, transformation, **kwargs):
         return label
 
-    def get_config(self):
-        config = {
-            "height": self.height,
-            "width": self.width,
-            "bounding_box_format": self.bounding_box_format,
-            "segmentation_classes": self.segmentation_classes,
-        }
-        base_config = super().get_config()
-        return dict(list(base_config.items()) + list(config.items()))
 
     def _crop_bounding_boxes(self, image, bounding_boxes, transformation):
         top = tf.cast(transformation["top"], dtype=self.compute_dtype)

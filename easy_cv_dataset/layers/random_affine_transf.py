@@ -14,14 +14,11 @@
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import backend
-
+import keras
+from keras import backend
 from keras_cv import bounding_box
-from keras_cv.layers.preprocessing.vectorized_base_image_augmentation_layer import (
-    VectorizedBaseImageAugmentationLayer,
-)
-from keras_cv.utils import preprocessing
+from keras_cv.layers import VectorizedBaseImageAugmentationLayer
+from . import utils as preprocessing_utils
 
 # In order to support both unbatched and batched inputs, the horizontal
 # and verticle axis is reverse indexed
@@ -42,7 +39,7 @@ def process_segmentation_masks(segmentation_masks, segmentation_classes, functio
         return segmentation_masks
     else:
         # We therefore one-hot encode before trasformation to avoid bad interpolation
-        # during the transformation transformation. We then make the mask sparse
+        # during the transformation. We then make the mask sparse
         # again using tf.argmax.
         if segmentation_masks.shape[-1] == 1:
             raise ValueError(
@@ -56,11 +53,11 @@ def process_segmentation_masks(segmentation_masks, segmentation_classes, functio
         # pixels with ambugious value due to floating point math for rotation.
         return tf.round(segmentation_masks)
 
-def get_range(x, name, center=0.0):
+def get_range(x, name):
     if isinstance(x, (float, int)):
         if x==0:
             return None
-        y = [center - x, center + x]
+        y = [- x, + x]
     elif len(x) == 2 and all(
         isinstance(val, (float, int)) for val in x
     ):
@@ -74,7 +71,6 @@ def get_range(x, name, center=0.0):
     return y
 
 
-@keras.utils.register_keras_serializable(package="keras_cv")
 class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
     """A preprocessing layer which randomly applies an affine trasformation during training.
 
@@ -99,8 +95,11 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
 
     Arguments:
         rotation_range: Int. Degree range for random rotations.
-        zoom_range: Float or [lower, upper]. Range for random zoom. If a float,
-          `[lower, upper] = [1-zoom_range, 1+zoom_range]`.
+        zoom_range: Float or [lower, upper]. Range for random zoom. When
+          represented as a single float, this value is used for both the upper and
+          lower bound. A positive value means zooming out, while a negative value
+          means zooming in. For instance, `zoom_range=(-0.1, 0.3)` result in an
+          output zoomed out by a random amount in the range `[-10%, +30%]`.
         width_shift_range: Float fraction of total width
         height_shift_range: Float fraction of total height
         shear_range: Float. Shear Intensity (Shear angle in counter-clockwise
@@ -152,7 +151,7 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
         super().__init__(seed=seed, force_generator=True, **kwargs)
         
         self.rotation_range = get_range(rotation_range,'rotation_range')
-        self.zoom_range = get_range(zoom_range,'zoom_range', 1.0)
+        self.zoom_range = get_range(zoom_range,'zoom_range')
         self.width_shift_range = get_range(width_shift_range,'width_shift_range')
         self.height_shift_range = get_range(height_shift_range,'height_shift_range')
         self.shear_range = get_range(shear_range,'shear_range')
@@ -185,6 +184,9 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
         base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
     
     def get_random_transformation_batch(self, batch_size, **kwargs):
         """Generates random parameters for a transformation.
@@ -196,49 +198,49 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
         
 
         if self.rotation_range:
-            theta = self._random_generator.random_uniform(
+            theta = self._random_generator.uniform(
                 shape=[batch_size,], minval=self.rotation_range[0], maxval=self.rotation_range[1]
             )
         else:
             theta = tf.zeros(batch_size, tf.float32)
 
         if self.height_shift_range:
-            ty = self._random_generator.random_uniform(
+            ty = self._random_generator.uniform(
                 shape=[batch_size,], minval=self.height_shift_range[0], maxval=self.height_shift_range[1]
             )
         else:
             ty = tf.zeros(batch_size, tf.float32)
 
         if self.width_shift_range:
-            tx = self._random_generator.random_uniform(
+            tx = self._random_generator.uniform(
                 shape=[batch_size,], minval=self.width_shift_range[0], maxval=self.width_shift_range[1]
             )
         else:
             tx = tf.zeros(batch_size, tf.float32)
 
         if self.shear_range:
-            shear = self._random_generator.random_uniform(
+            shear = self._random_generator.uniform(
                 shape=[batch_size], minval=self.shear_range[0], maxval=self.shear_range[1]
             )
         else:
             shear = tf.zeros(batch_size, tf.float32)
 
         if self.zoom_range:
-            zx = self._random_generator.random_uniform(
-                shape=[batch_size], minval=self.zoom_range[0], maxval=self.zoom_range[1]
+            zx = self._random_generator.uniform(
+                shape=[batch_size], minval=1+self.zoom_range[0], maxval=1+self.zoom_range[1]
             )
-            zy = self._random_generator.random_uniform(
-                shape=[batch_size], minval=self.zoom_range[0], maxval=self.zoom_range[1]
+            zy = self._random_generator.uniform(
+                shape=[batch_size], minval=1+self.zoom_range[0], maxval=1+self.zoom_range[1]
             )
         else:
             zx = tf.ones(batch_size, tf.float32)
             zy = tf.ones(batch_size, tf.float32) 
         
         if self.horizontal_flip:
-            zx = tf.sign(self._random_generator.random_uniform(shape=[batch_size], minval=-1, maxval=1)) * zx
+            zx = tf.sign(self._random_generator.uniform(shape=[batch_size], minval=-1, maxval=1)) * zx
         
         if self.vertical_flip:
-            zy = tf.sign(self._random_generator.random_uniform(shape=[batch_size], minval=-1, maxval=1)) * zy
+            zy = tf.sign(self._random_generator.uniform(shape=[batch_size], minval=-1, maxval=1)) * zy
             
         transformations = {
             "theta": theta,
@@ -250,17 +252,6 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
         }
 
         return transformations
-
-    def get_A(self, transformations, img_hd, img_wd):
-        return get_affine_transform(
-            img_hd, img_wd,
-            theta=transformations["theta"],
-            tx=transformations["tx"],
-            ty=transformations["ty"],
-            shear=transformations["shear"],
-            zx=transformations["zx"],
-            zy=transformations["zy"],
-        )
         
     def augment_images(self, images, transformations, **kwargs):
         return self._mod_images(images, transformations)
@@ -272,12 +263,12 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
         return tf.squeeze(images, axis=0)
     
     def _mod_images(self, images, transformations):
-        images = preprocessing.ensure_tensor(images, self.compute_dtype)
+        images = preprocessing_utils.ensure_tensor(images, self.compute_dtype)
         image_shape = tf.shape(images)
         img_hd = image_shape[H_AXIS]
         img_wd = image_shape[W_AXIS]
         
-        A = self.get_A(transformations, tf.cast(img_hd, tf.float32), tf.cast(img_wd, tf.float32))
+        A = get_affine_transform(tf.cast(img_hd, tf.float32), tf.cast(img_wd, tf.float32), **transformations)
         transforms = tf.stack(
             values=[
                 A[..., 0, 0], A[..., 0, 1], A[..., 0, 2],
@@ -286,7 +277,7 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
             ],
             axis=-1,
         )
-        images = preprocessing.transform(
+        images = preprocessing_utils.transform(
             images=images,
             transforms=transforms,
             fill_mode=self.fill_mode,
@@ -325,12 +316,8 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
             images=images,
             dtype=self.compute_dtype,
         )
-        
-        #image_shape = tf.shape(images)
-        #img_hd = tf.cast(image_shape[H_AXIS], tf.float32)
-        #img_wd = tf.cast(image_shape[W_AXIS], tf.float32)
-        #A = self.get_A(transformations, img_hd, img_wd)
-        A = self.get_A(transformations, 1.0, 1.0)
+
+        A = get_affine_transform(1.0, 1.0, **transformations)
         
         boxes = bounding_boxes["boxes"]
         ones = tf.ones_like(boxes[..., 0])

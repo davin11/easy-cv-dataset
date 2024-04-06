@@ -256,15 +256,15 @@ def dataset_from_dataframe(
         dataset = dataset.map(
             pre_batching_operation, num_parallel_calls=tf.data.AUTOTUNE
         )
+        dataset = dataset.map(
+          lambda x: {
+            dictname_input: x[dictname_input],
+            dictname_target: x[dictname_target],
+          }, num_parallel_calls=tf.data.AUTOTUNE
+        )
 
     if batch_size is not None:
-        #try:
         dataset = dataset.ragged_batch(batch_size)
-        #    # dataset = dataset.batch(batch_size)
-        #except:
-        #    dataset = dataset.apply(
-        #        tf.data.experimental.dense_to_ragged_batch(batch_size)
-        #    )
 
     if post_batching_operation is not None:
         dataset = dataset.map(
