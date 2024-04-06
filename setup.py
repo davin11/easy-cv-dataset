@@ -24,7 +24,7 @@ setup(
     long_description=README,
     long_description_content_type="text/markdown",
     license="Apache License 2.0",
-    packages=['easy_cv_dataset', ],
+    packages=['easy_cv_dataset', 'easy_cv_dataset.layers'],
     python_requires=">=3.9",
     install_requires=[
         'keras-cv==0.8.2',

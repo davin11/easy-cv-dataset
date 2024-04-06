@@ -24,7 +24,7 @@ from PIL import Image
 import keras
 from .utils import dataframe_from_directory
 from .utils import dataset_from_dataframe
-from layers.to_tuple import ToTuple
+from .layers import ToTuple
 from keras_cv import bounding_box
 from keras_cv.layers import Rescaling
 
