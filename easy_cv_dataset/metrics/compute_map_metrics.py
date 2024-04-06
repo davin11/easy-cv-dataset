@@ -14,23 +14,19 @@
 
 from sklearn.metrics import precision_recall_curve
 from keras_cv import bounding_box
-
+import tensorflow as tf
+import numpy as np
+from keras.utils import Progbar
+from keras.callbacks import Callback
 
 def compute_mAP_metrics(
     model, dataset, bounding_box_format=None, iou_th=0.5, sentinel=-1
 ):
-    from keras.utils import Progbar
-    from keras.utils.io_utils import print_msg
-    import tensorflow
-    import numpy as np
 
     assert iou_th > 0
 
-    bounding_box_format = (
-        bounding_box_format
-        if bounding_box_format is not None
-        else dataset.bounding_box_format
-    )
+    if bounding_box_format is None:
+        bounding_box_format = dataset.bounding_box_format
 
     if hasattr(dataset, "class_names"):
         class_names = dataset.class_names
@@ -53,7 +49,7 @@ def compute_mAP_metrics(
 
         for index_image in range(len(images)):
             boxes_pred_image = {
-                k: tensorflow.convert_to_tensor(boxes_pred[k][index_image])
+                k: tf.convert_to_tensor(boxes_pred[k][index_image])
                 for k in boxes_pred
             }
             target_classes = boxes_gt["classes"][index_image]
@@ -68,21 +64,21 @@ def compute_mAP_metrics(
                 bounding_box_format=bounding_box_format,
             )
 
-            inds = tensorflow.argsort(detection_scores, direction="DESCENDING")
+            inds = tf.argsort(detection_scores, direction="DESCENDING")
             for index_box in inds:
                 s = detection_scores[index_box]
                 c = detection_classes[index_box]
 
                 vald = target_valid & (target_classes == c)
-                comb = detection_iou[index_box] * tensorflow.cast(
+                comb = detection_iou[index_box] * tf.cast(
                     vald, detection_iou.dtype
                 )
-                th = tensorflow.math.maximum(
-                    tensorflow.reduce_max(comb), iou_th
+                th = tf.math.maximum(
+                    tf.reduce_max(comb), iou_th
                 )
                 comb = comb < th
                 target_valid = target_valid & comb
-                p = tensorflow.reduce_all(comb) == False
+                p = tf.reduce_all(comb) == False
 
                 list_classes.append(c.numpy())
                 list_scores.append(s.numpy())
@@ -117,6 +113,23 @@ def compute_mAP_metrics(
             ap[index] = -np.sum(np.diff(recall) * np.array(precision)[:-1])
 
         name = class_names[int(c)] if class_names else c
-        print_msg("%3d) AP of %20s = %7.5f" % (index, name, ap[index]))
+        print("%3d) AP of %20s = %7.5f" % (index, name, ap[index]))
 
-    return {"mAP": np.nanmean(ap)}
+    return np.nanmean(ap)
+
+class EvaluateMAPmetricsCallback(Callback):
+    def __init__(self, data, bounding_box_format=None, iou_th=0.5):
+        super().__init__()
+        self.data = data
+        self.bounding_box_format = bounding_box_format
+        self.iou_th = iou_th
+
+    def on_epoch_end(self, epoch, logs):
+        metrics = compute_mAP_metrics(
+            self.model,
+            self.data,
+            bounding_box_format=self.bounding_box_format,
+            iou_th=self.iou_th,
+        )
+        logs.update({'mAP': metrics})
+        return logs

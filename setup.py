@@ -24,12 +24,13 @@ setup(
     long_description=README,
     long_description_content_type="text/markdown",
     license="Apache License 2.0",
-    packages=['easy_cv_dataset', 'easy_cv_dataset.layers'],
+    packages=['easy_cv_dataset', 'easy_cv_dataset.layers', 'easy_cv_dataset.metrics'],
     python_requires=">=3.9",
     install_requires=[
         'keras-cv==0.8.2',
         'pandas>=2.0.0',
         'pycocotools>=2.0.4',
+        'sklearn',
     ],
     classifiers=[
         "Development Status :: 1 - Planning",
