@@ -30,7 +30,7 @@ setup(
         'keras-cv==0.8.2',
         'pandas>=2.0.0',
         'pycocotools>=2.0.4',
-        'sklearn',
+        'scikit-learn',
     ],
     classifiers=[
         "Development Status :: 1 - Planning",
