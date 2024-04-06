@@ -24,6 +24,7 @@ from PIL import Image
 import keras
 from .utils import dataframe_from_directory
 from .utils import dataset_from_dataframe
+from layers.to_tuple import ToTuple
 from keras_cv import bounding_box
 from keras_cv.layers import Rescaling
 
@@ -112,14 +113,6 @@ def _load_map(path, class_mode, num_classes):
     return y
 
 
-def _dict_to_tuple_fun(dat, dictname_input, dictname_target, max_boxes=None):
-    x = dat[dictname_input]
-    y = dat[dictname_target]
-    if dictname_target == BOUNDING_BOXES:
-        y = bounding_box.to_dense(y, max_boxes=max_boxes)
-    return x, y
-
-
 def _get_fun_load_class(x, class_mode, num_classes):
     if (not isinstance(class_mode, str)) and callable(class_mode):
         return class_mode(x)
@@ -140,8 +133,7 @@ def _get_fun_load_class(x, class_mode, num_classes):
 
 
 def _update_post_batching_processing(post_batching_processing, do_normalization, dictname_input, dictname_target, max_boxes=None):
-    to_tuple = partial(_dict_to_tuple_fun,
-                       dictname_input=dictname_input,
+    to_tuple = ToTuple(dictname_input=dictname_input,
                        dictname_target=dictname_target,
                        max_boxes=max_boxes
                        )
@@ -292,8 +284,8 @@ def image_classification_dataset_from_dataframe(
     post_batching_processing = _update_post_batching_processing(
         post_batching_processing=post_batching_processing,
         do_normalization=do_normalization,
-        dictname_input=dictname_input,
-        dictname_target=dictname_target,
+        dictname_input=IMAGES,
+        dictname_target=LABELS,
         max_boxes=None)
 
     dataset = dataset_from_dataframe(
@@ -423,8 +415,8 @@ def image_segmentation_dataset_from_dataframe(
     post_batching_processing = _update_post_batching_processing(
         post_batching_processing=post_batching_processing,
         do_normalization=do_normalization,
-        dictname_input=dictname_input,
-        dictname_target=dictname_target,
+        dictname_input=IMAGES,
+        dictname_target=SEGMENTATION_MASKS,
         max_boxes=None)
 
     dataset = dataset_from_dataframe(
@@ -594,12 +586,12 @@ def image_objdetect_dataset_from_dataframe(
         target=bounding_box_format,
         dtype="float32",
     )
-    
+
     post_batching_processing = _update_post_batching_processing(
         post_batching_processing=post_batching_processing,
         do_normalization=do_normalization,
-        dictname_input=dictname_input,
-        dictname_target=dictname_target,
+        dictname_input=IMAGES,
+        dictname_target=BOUNDING_BOXES,
         max_boxes=max_boxes)
 
     if shuffle:
