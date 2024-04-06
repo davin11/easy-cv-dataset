@@ -56,7 +56,8 @@ def compute_mAP_metrics(
             target_valid = target_classes != sentinel
             detection_valid = boxes_pred_image["classes"] != sentinel
             detection_scores = boxes_pred_image["confidence"][detection_valid]
-            detection_classes = boxes_pred_image["classes"][detection_valid]
+            detection_classes = tf.cast(boxes_pred_image["classes"][detection_valid],
+                                        target_classes.dtype)
 
             detection_iou = bounding_box.compute_iou(
                 boxes_pred_image["boxes"][detection_valid],
@@ -133,3 +134,11 @@ class EvaluateMAPmetricsCallback(Callback):
         )
         logs.update({'mAP': metrics})
         return logs
+
+
+def compute_dataset_pycoco_metrics(model, dataset, bounding_box_format):
+    from keras_cv.callbacks import PyCOCOCallback
+    fun = PyCOCOCallback(validation_data=dataset, bounding_box_format=bounding_box_format)
+    fun.set_model(model)
+    logs = fun.on_epoch_end(0)
+    return logs

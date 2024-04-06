@@ -76,7 +76,7 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
 
     This layer will apply random affine trasformation to each image, filling empty space
     according to `fill_mode`.
-    
+
     Input pixel values can be of any range (e.g. `[0., 1.)` or `[0, 255]`) and
     of interger or floating point dtype. By default, the layer will output
     floats.
