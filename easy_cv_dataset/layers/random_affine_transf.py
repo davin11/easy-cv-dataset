@@ -76,11 +76,7 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
 
     This layer will apply random affine trasformation to each image, filling empty space
     according to `fill_mode`.
-
-    By default, random trasformation is only applied during training.
-    At inference time, the layer does nothing. If you need to apply random
-    trasformation at inference time, set `training` to True when calling the layer.
-
+    
     Input pixel values can be of any range (e.g. `[0., 1.)` or `[0, 255]`) and
     of interger or floating point dtype. By default, the layer will output
     floats.
@@ -148,7 +144,7 @@ class RandomAffineTransf(VectorizedBaseImageAugmentationLayer):
         segmentation_classes=None,
         **kwargs,
     ):
-        super().__init__(seed=seed, force_generator=True, **kwargs)
+        super().__init__(seed=seed, **kwargs)
         
         self.rotation_range = get_range(rotation_range,'rotation_range')
         self.zoom_range = get_range(zoom_range,'zoom_range')

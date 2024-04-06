@@ -61,7 +61,7 @@ class CentralCrop(BaseImageAugmentationLayer):
         segmentation_classes=None,
         **kwargs
     ):
-        super().__init__(**kwargs, autocast=False, force_generator=True)
+        super().__init__(**kwargs, autocast=False)
         self.height = height
         self.width = width
         self.auto_vectorize = False
