@@ -1,7 +1,7 @@
 import os
 import pandas
 from multiprocessing.pool import ThreadPool
-from keras.utils.module_utils import tensorflow as tf
+import tensorflow as tf
 
 def _index_directory(
     directory,

@@ -18,19 +18,20 @@
 import os
 import pandas
 import numpy as np
-from keras.utils.module_utils import tensorflow as tf
-#import tensorflow.compat.v2 as tf
+import tensorflow as tf
 from functools import partial
 from PIL import Image
 import keras
 from .utils import dataframe_from_directory
 from .utils import dataset_from_dataframe
 from keras_cv import bounding_box
-from keras_cv.layers.preprocessing.base_image_augmentation_layer import (
-    IMAGES, LABELS, BOUNDING_BOXES, KEYPOINTS, SEGMENTATION_MASKS
-)
 from keras_cv.layers import Rescaling
 
+IMAGES = "images"
+LABELS = "labels"
+BOUNDING_BOXES = "bounding_boxes"
+KEYPOINTS = "keypoints"
+SEGMENTATION_MASKS = "segmentation_masks"
 ALLOW_LIST_FORMATS = (".bmp", ".tiff", ".tif", ".jpeg", ".jpg", ".png")
 
 
@@ -137,6 +138,32 @@ def _get_fun_load_class(x, class_mode, num_classes):
             f"Received: class_mode={class_mode}"
         )
 
+
+def _update_post_batching_processing(post_batching_processing, do_normalization, dictname_input, dictname_target, max_boxes=None):
+    to_tuple = partial(_dict_to_tuple_fun,
+                       dictname_input=dictname_input,
+                       dictname_target=dictname_target,
+                       max_boxes=max_boxes
+                       )
+
+    if post_batching_processing is None:
+        if do_normalization:
+            post_batching_processing = keras.Sequential(
+                layers=[Rescaling(1 / 255.0), to_tuple]
+            )
+        else:
+            post_batching_processing = to_tuple
+    elif do_normalization is None:
+        post_batching_processing = keras.Sequential(
+            layers=[post_batching_processing, Rescaling(1 / 255.0), to_tuple]
+        )
+    else:
+        post_batching_processing = keras.Sequential(
+            layers=[post_batching_processing, to_tuple]
+        )
+    return post_batching_processing
+
+
 def image_classification_dataset_from_dataframe(
     dataframe,
     root_path=None,
@@ -146,9 +173,9 @@ def image_classification_dataset_from_dataframe(
     class_mode="categorical",
     color_mode="rgb",
     pre_batching_processing=None,
-    do_normalization=False,
     batch_size=None,
     post_batching_processing=None,
+    do_normalization=False,
     colname_image="image",
     colname_class="class",
 ):
@@ -178,11 +205,11 @@ def image_classification_dataset_from_dataframe(
           Whether the images will be converted to
           have 1, 3, or 4 channels.
       pre_batching_processing: The operation(s) to apply before the data is put into a batch.
-      do_normalization: If True, normalize the image in the range [0,1].
       batch_size: Size of the batches of data. Default: None.
         If `None`, the data will not be batched
         (the dataset will yield individual samples).
       post_batching_processing: The operation(s) to apply after tha data has been batched.
+      do_normalization: If True, normalize the image in the range [0,1].
       colname_image: column name for image file. Default: 'image'.
       colname_class:: column name for class. Default: 'class'.
     Returns:
@@ -262,25 +289,12 @@ def image_classification_dataset_from_dataframe(
         )
 
     load_fun_input = partial(_load_img, num_channels=num_channels)
-
-    if do_normalization:
-        if post_batching_processing is None:
-            post_batching_processing = Rescaling(1 / 255.0)
-        else:
-            post_batching_processing = keras.Sequential(
-                layers=[post_batching_processing, Rescaling(1 / 255.0)]
-            )
-
-    if post_batching_processing is None:
-        post_batching_processing = lambda x: _dict_to_tuple_fun(
-            x, dictname_input, dictname_target, #max_boxes=max_boxes
-        )
-    else:
-        post_batching_processing = keras.Sequential(
-            layers=[post_batching_processing, lambda x: _dict_to_tuple_fun(
-            x, dictname_input, dictname_target, #max_boxes=max_boxes
-            ), ]
-        )
+    post_batching_processing = _update_post_batching_processing(
+        post_batching_processing=post_batching_processing,
+        do_normalization=do_normalization,
+        dictname_input=dictname_input,
+        dictname_target=dictname_target,
+        max_boxes=None)
 
     dataset = dataset_from_dataframe(
         dataframe=dataframe,
@@ -313,9 +327,9 @@ def image_segmentation_dataset_from_dataframe(
     class_mode="categorical",
     color_mode="rgb",
     pre_batching_processing=None,
-    do_normalization=False,
     batch_size=None,
     post_batching_processing=None,
+    do_normalization=False,
     colname_image="image",
     colname_mask="segmentation_mask",
 ):
@@ -345,11 +359,11 @@ def image_segmentation_dataset_from_dataframe(
           Whether the images will be converted to
           have 1, 3, or 4 channels.
       pre_batching_processing: The operation(s) to apply before the data is put into a batch.
-      do_normalization: If True, normalize the image in the range [0,1].
       batch_size: Size of the batches of data. Default: None.
         If `None`, the data will not be batched
         (the dataset will yield individual samples).
       post_batching_processing: The operation(s) to apply after tha data has been batched.
+      do_normalization: If True, normalize the image in the range [0,1].
       colname_image: column name for image file. Default: 'image'.
       colname_mask: column name for mask file. Default: 'segmentation_mask'.
     Returns:
@@ -406,25 +420,12 @@ def image_segmentation_dataset_from_dataframe(
         )
 
     load_fun_input = partial(_load_img, num_channels=num_channels)
-
-    if do_normalization:
-        if post_batching_processing is None:
-            post_batching_processing = Rescaling(1 / 255.0)
-        else:
-            post_batching_processing = keras.Sequential(
-                layers=[post_batching_processing, Rescaling(1 / 255.0)]
-            )
-
-    if post_batching_processing is None:
-        post_batching_processing = lambda x: _dict_to_tuple_fun(
-            x, dictname_input, dictname_target, #max_boxes=max_boxes
-        )
-    else:
-        post_batching_processing = keras.Sequential(
-            layers=[post_batching_processing, lambda x: _dict_to_tuple_fun(
-            x, dictname_input, dictname_target, #max_boxes=max_boxes
-            ), ]
-        )
+    post_batching_processing = _update_post_batching_processing(
+        post_batching_processing=post_batching_processing,
+        do_normalization=do_normalization,
+        dictname_input=dictname_input,
+        dictname_target=dictname_target,
+        max_boxes=None)
 
     dataset = dataset_from_dataframe(
         dataframe=dataframe,
@@ -473,9 +474,9 @@ def image_objdetect_dataset_from_dataframe(
     class_mode="int",
     color_mode="rgb",
     pre_batching_processing=None,
-    do_normalization=False,
     batch_size=None,
     post_batching_processing=None,
+    do_normalization=False,
     colname_image="image",
     colname_class="class",
     colname_box=["xmin", "ymin", "xmax", "ymax"],
@@ -511,11 +512,11 @@ def image_objdetect_dataset_from_dataframe(
           Whether the images will be converted to
           have 1, 3, or 4 channels.
       pre_batching_processing: The operation(s) to apply before the data is put into a batch.
-      do_normalization: If True, normalize the image in the range [0,1].
       batch_size: Size of the batches of data. Default: 32.
         If `None`, the data will not be batched
         (the dataset will yield individual samples).
       post_batching_processing: The operation(s) to apply after tha data has been batched.
+      do_normalization: If True, normalize the image in the range [0,1].
       colname_image: column name for image file. Default: 'image'.
       colname_class: column name for class. Default: 'class'.
       colname_box: column names for box position. Default: ["xmin", "ymin", "xmax", "ymax"].
@@ -593,25 +594,13 @@ def image_objdetect_dataset_from_dataframe(
         target=bounding_box_format,
         dtype="float32",
     )
-
-    if do_normalization:
-        if post_batching_processing is None:
-            post_batching_processing = Rescaling(1 / 255.0)
-        else:
-            post_batching_processing = keras.Sequential(
-                layers=[post_batching_processing, Rescaling(1 / 255.0)]
-            )
-
-    if post_batching_processing is None:
-        post_batching_processing = lambda x: _dict_to_tuple_fun(
-            x, dictname_input, dictname_target, max_boxes=max_boxes
-        )
-    else:
-        post_batching_processing = keras.Sequential(
-            layers=[post_batching_processing, lambda x: _dict_to_tuple_fun(
-            x, dictname_input, dictname_target, max_boxes=max_boxes
-            ), ]
-        )
+    
+    post_batching_processing = _update_post_batching_processing(
+        post_batching_processing=post_batching_processing,
+        do_normalization=do_normalization,
+        dictname_input=dictname_input,
+        dictname_target=dictname_target,
+        max_boxes=max_boxes)
 
     if shuffle:
         if seed is None:

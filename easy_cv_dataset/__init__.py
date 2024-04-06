@@ -20,7 +20,7 @@ A library for dataset loading.
 
 __version__ = "0.0.1"
 
-from image_dataset import image_dataframe_from_directory
-from image_dataset import image_classification_dataset_from_dataframe
-from image_dataset import image_segmentation_dataset_from_dataframe
-from image_dataset import image_objdetect_dataset_from_dataframe
+from .image_dataset import image_dataframe_from_directory
+from .image_dataset import image_classification_dataset_from_dataframe
+from .image_dataset import image_segmentation_dataset_from_dataframe
+from .image_dataset import image_objdetect_dataset_from_dataframe
