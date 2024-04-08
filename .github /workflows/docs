@@ -5,8 +5,16 @@ on:
     branches: [main] # branch to trigger deployment
 
 jobs:
+  docs:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ammaraskar/sphinx-action@master
+      with:
+        docs-folder: "docs/"
   pages:
     runs-on: ubuntu-20.04
+    needs: docs
     steps:
     - id: deployment
       uses: sphinx-notes/pages@v3
