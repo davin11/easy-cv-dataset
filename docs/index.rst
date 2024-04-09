@@ -6,10 +6,12 @@
 Welcome to easy-cv-dataset's documentation!
 ===========================================
 
+.. automodule:: easy_cv_dataset
+    :members:
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
 
 
 Indices and tables
