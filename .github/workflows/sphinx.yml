@@ -49,9 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: docs
     permissions:
-      pull-requests: write
-      issues: write
-      repository-projects: write
+      contents: write
     steps:
     - name: Download docs HTML from artifact storage
       uses: actions/download-artifact@v3
