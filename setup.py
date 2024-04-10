@@ -30,6 +30,7 @@ setup(
         'keras-cv==0.8.2',
         'pandas>=2.0.0',
         'scikit-learn',
+        'pillow',
     ],
     classifiers=[
         "Development Status :: 1 - Planning",
