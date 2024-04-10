@@ -1,3 +1,4 @@
 keras-cv==0.8.2
 pandas>=2.0.0
 scikit-learn
+tensorflow-cpu>=2.16.1
