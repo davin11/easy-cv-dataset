@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>easy_cv_dataset.image_dataset &mdash; easy-cv-dataset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            easy-cv-dataset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Image Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../metrics.html">Metrics</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">easy-cv-dataset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">easy_cv_dataset.image_dataset</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for easy_cv_dataset.image_dataset</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2024</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     https://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ==============================================================================</span>
+<span class="sd">&quot;&quot;&quot;Keras image dataset loading utilities.&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">dataframe_from_directory</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">dataset_from_dataframe</span>
+<span class="kn">from</span> <span class="nn">.layers</span> <span class="kn">import</span> <span class="n">ToTuple</span>
+<span class="kn">from</span> <span class="nn">keras_cv</span> <span class="kn">import</span> <span class="n">bounding_box</span>
+<span class="kn">from</span> <span class="nn">keras_cv.layers</span> <span class="kn">import</span> <span class="n">Rescaling</span>
+
+<span class="n">IMAGES</span> <span class="o">=</span> <span class="s2">&quot;images&quot;</span>
+<span class="n">LABELS</span> <span class="o">=</span> <span class="s2">&quot;labels&quot;</span>
+<span class="n">BOUNDING_BOXES</span> <span class="o">=</span> <span class="s2">&quot;bounding_boxes&quot;</span>
+<span class="n">KEYPOINTS</span> <span class="o">=</span> <span class="s2">&quot;keypoints&quot;</span>
+<span class="n">SEGMENTATION_MASKS</span> <span class="o">=</span> <span class="s2">&quot;segmentation_masks&quot;</span>
+<span class="n">ALLOW_LIST_FORMATS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;.bmp&quot;</span><span class="p">,</span> <span class="s2">&quot;.tiff&quot;</span><span class="p">,</span> <span class="s2">&quot;.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;.jpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;.png&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="image_dataframe_from_directory">
+<a class="viewcode-back" href="../../image.html#easy_cv_dataset.image_dataframe_from_directory">[docs]</a>
+<span class="k">def</span> <span class="nf">image_dataframe_from_directory</span><span class="p">(</span>
+    <span class="n">directory</span><span class="p">,</span> <span class="n">follow_links</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a `pandas.DataFrame` from image files in a directory.</span>
+
+<span class="sd">    If your directory structure is:</span>
+
+<span class="sd">    ```</span>
+<span class="sd">    main_directory/</span>
+<span class="sd">    ...class_a/</span>
+<span class="sd">    ......a_image_1.jpg</span>
+<span class="sd">    ......a_image_2.jpg</span>
+<span class="sd">    ...class_b/</span>
+<span class="sd">    ......b_image_1.jpg</span>
+<span class="sd">    ......b_image_2.jpg</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Then calling `image_dataframe_from_directory(main_directory)` will </span>
+<span class="sd">    return a `pandas.DataFrame` that yields batches of</span>
+<span class="sd">    images from the subdirectories `class_a` and `class_b`.</span>
+
+<span class="sd">    Supported image formats: jpeg, png, bmp, tiff.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      directory: Directory where the data is located.</span>
+<span class="sd">      follow_links: Whether to visit subdirectories pointed to by symlinks.</span>
+<span class="sd">          Defaults to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A `pandas.DataFrame` object.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dataframe_from_directory</span><span class="p">(</span>
+        <span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span>
+        <span class="n">formats</span><span class="o">=</span><span class="n">ALLOW_LIST_FORMATS</span><span class="p">,</span>
+        <span class="n">colname_file</span><span class="o">=</span><span class="s2">&quot;image&quot;</span><span class="p">,</span>
+        <span class="n">colname_class</span><span class="o">=</span><span class="s2">&quot;class&quot;</span><span class="p">,</span>
+        <span class="n">follow_links</span><span class="o">=</span><span class="n">follow_links</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_load_img</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">num_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load an image from a path and resize it.&quot;&quot;&quot;</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_image</span><span class="p">(</span>
+        <span class="n">img</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="n">num_channels</span><span class="p">,</span> <span class="n">expand_animations</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">img</span>
+
+
+<span class="k">def</span> <span class="nf">_load_map_np</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">decode</span><span class="p">()),</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_load_map</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">numpy_function</span><span class="p">(</span><span class="n">_load_map_np</span><span class="p">,</span> <span class="p">[</span><span class="n">path</span><span class="p">,],</span> <span class="n">Tout</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">y</span><span class="o">.</span><span class="n">set_shape</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;binary&quot;</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;int&quot;</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;categorical&quot;</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">one_hot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;`class_mode` argument must be &quot;</span>
+            <span class="s1">&#39;one of &quot;int&quot;, &quot;binary&quot;, &quot;categorical&quot;, or &quot;raw&quot;. &#39;</span>
+            <span class="sa">f</span><span class="s2">&quot;Received: class_mode=</span><span class="si">{</span><span class="n">class_mode</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">y</span>
+
+
+<span class="k">def</span> <span class="nf">_get_fun_load_class</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">class_mode</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="n">class_mode</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">class_mode</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;int&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;categorical&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">one_hot</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot;int64&quot;</span><span class="p">),</span> <span class="n">num_classes</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;`class_mode` argument must be callable or &quot;</span>
+            <span class="s1">&#39;one of &quot;int&quot;, &quot;categorical&quot;, or &quot;raw&quot;. &#39;</span>
+            <span class="sa">f</span><span class="s2">&quot;Received: class_mode=</span><span class="si">{</span><span class="n">class_mode</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_update_post_batching_processing</span><span class="p">(</span><span class="n">post_batching_processing</span><span class="p">,</span> <span class="n">do_normalization</span><span class="p">,</span> <span class="n">dictname_input</span><span class="p">,</span> <span class="n">dictname_target</span><span class="p">,</span> <span class="n">max_boxes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">to_tuple</span> <span class="o">=</span> <span class="n">ToTuple</span><span class="p">(</span><span class="n">dictname_input</span><span class="o">=</span><span class="n">dictname_input</span><span class="p">,</span>
+                       <span class="n">dictname_target</span><span class="o">=</span><span class="n">dictname_target</span><span class="p">,</span>
+                       <span class="n">max_boxes</span><span class="o">=</span><span class="n">max_boxes</span>
+                       <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">post_batching_processing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">do_normalization</span><span class="p">:</span>
+            <span class="n">post_batching_processing</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+                <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="n">Rescaling</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">255.0</span><span class="p">),</span> <span class="n">to_tuple</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">post_batching_processing</span> <span class="o">=</span> <span class="n">to_tuple</span>
+    <span class="k">elif</span> <span class="n">do_normalization</span><span class="p">:</span>
+        <span class="n">post_batching_processing</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="n">post_batching_processing</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">255.0</span><span class="p">),</span> <span class="n">to_tuple</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">post_batching_processing</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="n">post_batching_processing</span><span class="p">,</span> <span class="n">to_tuple</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">post_batching_processing</span>
+
+
+<div class="viewcode-block" id="image_classification_dataset_from_dataframe">
+<a class="viewcode-back" href="../../image.html#easy_cv_dataset.image_classification_dataset_from_dataframe">[docs]</a>
+<span class="k">def</span> <span class="nf">image_classification_dataset_from_dataframe</span><span class="p">(</span>
+    <span class="n">dataframe</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">class_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">class_mode</span><span class="o">=</span><span class="s2">&quot;categorical&quot;</span><span class="p">,</span>
+    <span class="n">color_mode</span><span class="o">=</span><span class="s2">&quot;rgb&quot;</span><span class="p">,</span>
+    <span class="n">pre_batching_processing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">post_batching_processing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">do_normalization</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">colname_image</span><span class="o">=</span><span class="s2">&quot;image&quot;</span><span class="p">,</span>
+    <span class="n">colname_class</span><span class="o">=</span><span class="s2">&quot;class&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a `tf.data.Dataset` from a dataframe.</span>
+
+<span class="sd">    Then calling `image_dataset_from_dataframe(dataframe)`</span>
+<span class="sd">    will return a `tf.data.Dataset`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      dataframe: Dataframe with list of images.</span>
+<span class="sd">      root_path: if it is not None, all paths are relative to it.</span>
+<span class="sd">      shuffle: Whether to shuffle the data. Default: True.</span>
+<span class="sd">          If set to False, sorts the data in alphanumeric order.</span>
+<span class="sd">      seed: Optional random seed for shuffling and transformations.</span>
+<span class="sd">      class_mode: String describing the encoding of classes. Options are:</span>
+<span class="sd">          - &#39;raw&#39;: means that the classes are not encoded</span>
+<span class="sd">          - &#39;int&#39;: means that the classes are encoded as integers</span>
+<span class="sd">              (e.g. for `sparse_categorical_crossentropy` loss).</span>
+<span class="sd">          - &#39;categorical&#39; means that the classes are</span>
+<span class="sd">              encoded as a categorical vector</span>
+<span class="sd">              (e.g. for `categorical_crossentropy` loss).</span>
+<span class="sd">          - None (no labels).</span>
+<span class="sd">      class_names: Only valid if &quot;class_mode&quot; is &#39;int&#39; or &#39;categorical&#39;. This is the explicit</span>
+<span class="sd">          list of class names used for the encoding.</span>
+<span class="sd">          (otherwise alphanumeric order is used).</span>
+<span class="sd">      color_mode: One of &quot;grayscale&quot;, &quot;rgb&quot;, &quot;rgba&quot;. Default: &quot;rgb&quot;.</span>
+<span class="sd">          Whether the images will be converted to</span>
+<span class="sd">          have 1, 3, or 4 channels.</span>
+<span class="sd">      pre_batching_processing: The operation(s) to apply before the data is put into a batch.</span>
+<span class="sd">      batch_size: Size of the batches of data. Default: None.</span>
+<span class="sd">        If `None`, the data will not be batched</span>
+<span class="sd">        (the dataset will yield individual samples).</span>
+<span class="sd">      post_batching_processing: The operation(s) to apply after tha data has been batched.</span>
+<span class="sd">      do_normalization: If True, normalize the image in the range [0,1].</span>
+<span class="sd">      colname_image: column name for image file. Default: &#39;image&#39;.</span>
+<span class="sd">      colname_class:: column name for class. Default: &#39;class&#39;.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">      A `tf.data.Dataset` object.</span>
+
+<span class="sd">    Rules regarding labels format:</span>
+
+<span class="sd">      - if `class_mode` is `int`, the labels are an `int32` tensor of shape `(batch_size,)`.</span>
+<span class="sd">      - if `class_mode` is `raw`, the classes are not converted.</span>
+<span class="sd">      - if `class_mode` is `categorical`, the labels are a `float32` tensor</span>
+<span class="sd">        of shape `(batch_size, num_classes)`, representing a one-hot</span>
+<span class="sd">        encoding of the class index.</span>
+
+<span class="sd">    Rules regarding number of channels in the yielded images:</span>
+
+<span class="sd">      - if `color_mode` is `grayscale`,</span>
+<span class="sd">        there&#39;s 1 channel in the image tensors.</span>
+<span class="sd">      - if `color_mode` is `rgb`,</span>
+<span class="sd">        there are 3 channels in the image tensors.</span>
+<span class="sd">      - if `color_mode` is `rgba`,</span>
+<span class="sd">        there are 4 channels in the image tensors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mf">1e6</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">root_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_image</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_image</span><span class="p">]</span>
+        <span class="p">]</span>
+
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">class_mode</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;int&quot;</span><span class="p">,</span> <span class="s2">&quot;categorical&quot;</span><span class="p">}:</span>
+        <span class="k">if</span> <span class="n">class_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">class_names</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataframe</span><span class="p">[</span><span class="n">colname_class</span><span class="p">])))</span>
+
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">dataframe</span><span class="p">[</span><span class="n">colname_class</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">class_names</span><span class="p">)]</span>
+        <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_class</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">class_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_class</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_names</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index_class</span><span class="p">,</span> <span class="n">name_class</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_names</span><span class="p">):</span>
+            <span class="n">num_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dataframe</span><span class="p">[</span><span class="n">colname_class</span><span class="p">]</span> <span class="o">==</span> <span class="n">index_class</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;For class &#39;</span><span class="si">{</span><span class="n">name_class</span><span class="si">}</span><span class="s2">&#39;, there are </span><span class="si">{</span><span class="n">num_img</span><span class="si">}</span><span class="s2"> images.&quot;</span><span class="p">,</span>
+                <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">class_names</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;You can only pass `class_names` if &quot;</span>
+            <span class="s1">&#39;`class_mode` is &quot;int&quot; or &quot;categorical&quot;.&#39;</span>
+            <span class="sa">f</span><span class="s2">&quot;Received: class_mode=</span><span class="si">{</span><span class="n">class_mode</span><span class="si">}</span><span class="s2">, and &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;class_names=</span><span class="si">{</span><span class="n">class_names</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">class_mode</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="n">class_mode</span><span class="p">):</span>
+        <span class="n">load_fun_target</span> <span class="o">=</span> <span class="n">class_mode</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">load_fun_target</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">_get_fun_load_class</span><span class="p">,</span> <span class="n">class_mode</span><span class="o">=</span><span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s2">&quot;rgb&quot;</span><span class="p">:</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="k">elif</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s2">&quot;rgba&quot;</span><span class="p">:</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">elif</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s2">&quot;grayscale&quot;</span><span class="p">:</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;`color_mode` must be one of {&quot;rgb&quot;, &quot;rgba&quot;, &quot;grayscale&quot;}. &#39;</span>
+            <span class="sa">f</span><span class="s2">&quot;Received: color_mode=</span><span class="si">{</span><span class="n">color_mode</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">load_fun_input</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_load_img</span><span class="p">,</span> <span class="n">num_channels</span><span class="o">=</span><span class="n">num_channels</span><span class="p">)</span>
+    <span class="n">post_batching_processing</span> <span class="o">=</span> <span class="n">_update_post_batching_processing</span><span class="p">(</span>
+        <span class="n">post_batching_processing</span><span class="o">=</span><span class="n">post_batching_processing</span><span class="p">,</span>
+        <span class="n">do_normalization</span><span class="o">=</span><span class="n">do_normalization</span><span class="p">,</span>
+        <span class="n">dictname_input</span><span class="o">=</span><span class="n">IMAGES</span><span class="p">,</span>
+        <span class="n">dictname_target</span><span class="o">=</span><span class="n">LABELS</span><span class="p">,</span>
+        <span class="n">max_boxes</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset_from_dataframe</span><span class="p">(</span>
+        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+        <span class="n">colname_input</span><span class="o">=</span><span class="n">colname_image</span><span class="p">,</span>
+        <span class="n">colname_target</span><span class="o">=</span><span class="n">colname_class</span><span class="p">,</span>
+        <span class="n">load_fun_input</span><span class="o">=</span><span class="n">load_fun_input</span><span class="p">,</span>
+        <span class="n">load_fun_target</span><span class="o">=</span><span class="n">load_fun_target</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+        <span class="n">pre_batching_operation</span><span class="o">=</span><span class="n">pre_batching_processing</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">post_batching_operation</span><span class="o">=</span><span class="n">post_batching_processing</span><span class="p">,</span>
+        <span class="n">dictname_input</span><span class="o">=</span><span class="n">IMAGES</span><span class="p">,</span>
+        <span class="n">dictname_target</span><span class="o">=</span><span class="n">LABELS</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Users may need to reference `class_names`, `batch_size` and `root_path`</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">class_names</span> <span class="o">=</span> <span class="n">class_names</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">root_path</span> <span class="o">=</span> <span class="n">root_path</span>
+    <span class="k">return</span> <span class="n">dataset</span></div>
+
+
+
+<div class="viewcode-block" id="image_segmentation_dataset_from_dataframe">
+<a class="viewcode-back" href="../../image.html#easy_cv_dataset.image_segmentation_dataset_from_dataframe">[docs]</a>
+<span class="k">def</span> <span class="nf">image_segmentation_dataset_from_dataframe</span><span class="p">(</span>
+    <span class="n">dataframe</span><span class="p">,</span>
+    <span class="n">class_names</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">class_mode</span><span class="o">=</span><span class="s2">&quot;categorical&quot;</span><span class="p">,</span>
+    <span class="n">color_mode</span><span class="o">=</span><span class="s2">&quot;rgb&quot;</span><span class="p">,</span>
+    <span class="n">pre_batching_processing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">post_batching_processing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">do_normalization</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">colname_image</span><span class="o">=</span><span class="s2">&quot;image&quot;</span><span class="p">,</span>
+    <span class="n">colname_mask</span><span class="o">=</span><span class="s2">&quot;segmentation_mask&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a `tf.data.Dataset` from a dataframe.</span>
+
+<span class="sd">    Calling `image_segmentation_dataset_from_dataframe(dataframe)`</span>
+<span class="sd">    will return a `tf.data.Dataset` that yields batches of</span>
+<span class="sd">    images from the subdirectories `class_a` and `class_b`, together with labels</span>
+<span class="sd">    0 and 1 (0 corresponding to `class_a` and 1 corresponding to `class_b`).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      dataframe: Dataframe with list of images.</span>
+<span class="sd">      root_path: if it is not None, all paths are relative to it.</span>
+<span class="sd">      shuffle: Whether to shuffle the data. Default: True.</span>
+<span class="sd">          If set to False, sorts the data in alphanumeric order.</span>
+<span class="sd">      seed: Optional random seed for shuffling and transformations.</span>
+<span class="sd">      class_mode: String describing the encoding of classes. Options are:</span>
+<span class="sd">          - &#39;int&#39;: means that the classes are encoded as integers</span>
+<span class="sd">              (e.g. for `sparse_categorical_crossentropy` loss).</span>
+<span class="sd">          - &#39;categorical&#39; means that the classes are</span>
+<span class="sd">              encoded as a categorical vector</span>
+<span class="sd">              (e.g. for `categorical_crossentropy` loss).</span>
+<span class="sd">      class_names: Only valid if &quot;class_mode&quot; is &#39;int&#39; or &#39;categorical&#39;. This is the explicit</span>
+<span class="sd">          list of class names used for the encoding.</span>
+<span class="sd">          (otherwise alphanumeric order is used).</span>
+<span class="sd">      color_mode: One of &quot;grayscale&quot;, &quot;rgb&quot;, &quot;rgba&quot;. Default: &quot;rgb&quot;.</span>
+<span class="sd">          Whether the images will be converted to</span>
+<span class="sd">          have 1, 3, or 4 channels.</span>
+<span class="sd">      pre_batching_processing: The operation(s) to apply before the data is put into a batch.</span>
+<span class="sd">      batch_size: Size of the batches of data. Default: None.</span>
+<span class="sd">        If `None`, the data will not be batched</span>
+<span class="sd">        (the dataset will yield individual samples).</span>
+<span class="sd">      post_batching_processing: The operation(s) to apply after tha data has been batched.</span>
+<span class="sd">      do_normalization: If True, normalize the image in the range [0,1].</span>
+<span class="sd">      colname_image: column name for image file. Default: &#39;image&#39;.</span>
+<span class="sd">      colname_mask: column name for mask file. Default: &#39;segmentation_mask&#39;.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">      A `tf.data.Dataset` object.</span>
+
+<span class="sd">    Rules regarding labels format:</span>
+
+<span class="sd">      - if `class_mode` is `int`, the labels are an `int32` tensor of shape</span>
+<span class="sd">        `(batch_size,)`.</span>
+<span class="sd">      - if `class_mode` is `raw`, the classes are converted.</span>
+<span class="sd">      - if `class_mode` is `categorical`, the labels are a `float32` tensor</span>
+<span class="sd">        of shape `(batch_size, num_classes)`, representing a one-hot</span>
+<span class="sd">        encoding of the class index.</span>
+
+<span class="sd">    Rules regarding number of channels in the yielded images:</span>
+
+<span class="sd">      - if `color_mode` is `grayscale`,</span>
+<span class="sd">        there&#39;s 1 channel in the image tensors.</span>
+<span class="sd">      - if `color_mode` is `rgb`,</span>
+<span class="sd">        there are 3 channels in the image tensors.</span>
+<span class="sd">      - if `color_mode` is `rgba`,</span>
+<span class="sd">        there are 4 channels in the image tensors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mf">1e6</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">root_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_image</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_image</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_mask</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_mask</span><span class="p">]</span>
+        <span class="p">]</span>
+
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_names</span><span class="p">)</span>
+    <span class="n">load_fun_target</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+        <span class="n">_load_map</span><span class="p">,</span> <span class="n">class_mode</span><span class="o">=</span><span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s2">&quot;rgb&quot;</span><span class="p">:</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="k">elif</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s2">&quot;rgba&quot;</span><span class="p">:</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">elif</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s2">&quot;grayscale&quot;</span><span class="p">:</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;`color_mode` must be one of {&quot;rgb&quot;, &quot;rgba&quot;, &quot;grayscale&quot;}. &#39;</span>
+            <span class="sa">f</span><span class="s2">&quot;Received: color_mode=</span><span class="si">{</span><span class="n">color_mode</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">load_fun_input</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_load_img</span><span class="p">,</span> <span class="n">num_channels</span><span class="o">=</span><span class="n">num_channels</span><span class="p">)</span>
+    <span class="n">post_batching_processing</span> <span class="o">=</span> <span class="n">_update_post_batching_processing</span><span class="p">(</span>
+        <span class="n">post_batching_processing</span><span class="o">=</span><span class="n">post_batching_processing</span><span class="p">,</span>
+        <span class="n">do_normalization</span><span class="o">=</span><span class="n">do_normalization</span><span class="p">,</span>
+        <span class="n">dictname_input</span><span class="o">=</span><span class="n">IMAGES</span><span class="p">,</span>
+        <span class="n">dictname_target</span><span class="o">=</span><span class="n">SEGMENTATION_MASKS</span><span class="p">,</span>
+        <span class="n">max_boxes</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset_from_dataframe</span><span class="p">(</span>
+        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+        <span class="n">colname_input</span><span class="o">=</span><span class="n">colname_image</span><span class="p">,</span>
+        <span class="n">colname_target</span><span class="o">=</span><span class="n">colname_mask</span><span class="p">,</span>
+        <span class="n">load_fun_input</span><span class="o">=</span><span class="n">load_fun_input</span><span class="p">,</span>
+        <span class="n">load_fun_target</span><span class="o">=</span><span class="n">load_fun_target</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+        <span class="n">pre_batching_operation</span><span class="o">=</span><span class="n">pre_batching_processing</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">post_batching_operation</span><span class="o">=</span><span class="n">post_batching_processing</span><span class="p">,</span>
+        <span class="n">dictname_input</span><span class="o">=</span><span class="n">IMAGES</span><span class="p">,</span>
+        <span class="n">dictname_target</span><span class="o">=</span><span class="n">SEGMENTATION_MASKS</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Users may need to reference `class_names`, `batch_size` and `root_path`</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">class_names</span> <span class="o">=</span> <span class="n">class_names</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">root_path</span> <span class="o">=</span> <span class="n">root_path</span>
+    <span class="k">return</span> <span class="n">dataset</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_get_objdetect_generator</span><span class="p">(</span>
+    <span class="n">dataframe</span><span class="p">,</span> <span class="n">colname_image</span><span class="p">,</span> <span class="n">colname_class</span><span class="p">,</span> <span class="n">colname_box</span><span class="p">,</span> <span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span>
+<span class="p">):</span>
+    <span class="n">list_img</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataframe</span><span class="p">[</span><span class="n">colname_image</span><span class="p">]))</span>
+    <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">list_img</span><span class="p">:</span>
+        <span class="n">sel</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">dataframe</span><span class="p">[</span><span class="n">colname_image</span><span class="p">]</span> <span class="o">==</span> <span class="n">image</span><span class="p">]</span>
+        <span class="k">yield</span> <span class="p">{</span>
+            <span class="n">IMAGES</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
+            <span class="n">BOUNDING_BOXES</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">sel</span><span class="p">[</span><span class="n">colname_box</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="s2">&quot;float32&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;classes&quot;</span><span class="p">:</span> <span class="n">_get_fun_load_class</span><span class="p">(</span><span class="n">sel</span><span class="p">[</span><span class="n">colname_class</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">class_mode</span><span class="o">=</span><span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+
+
+<div class="viewcode-block" id="image_objdetect_dataset_from_dataframe">
+<a class="viewcode-back" href="../../image.html#easy_cv_dataset.image_objdetect_dataset_from_dataframe">[docs]</a>
+<span class="k">def</span> <span class="nf">image_objdetect_dataset_from_dataframe</span><span class="p">(</span>
+    <span class="n">dataframe</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">class_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">class_mode</span><span class="o">=</span><span class="s2">&quot;int&quot;</span><span class="p">,</span>
+    <span class="n">color_mode</span><span class="o">=</span><span class="s2">&quot;rgb&quot;</span><span class="p">,</span>
+    <span class="n">pre_batching_processing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">post_batching_processing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">do_normalization</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">colname_image</span><span class="o">=</span><span class="s2">&quot;image&quot;</span><span class="p">,</span>
+    <span class="n">colname_class</span><span class="o">=</span><span class="s2">&quot;class&quot;</span><span class="p">,</span>
+    <span class="n">colname_box</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;xmin&quot;</span><span class="p">,</span> <span class="s2">&quot;ymin&quot;</span><span class="p">,</span> <span class="s2">&quot;xmax&quot;</span><span class="p">,</span> <span class="s2">&quot;ymax&quot;</span><span class="p">],</span>
+    <span class="n">bounding_box_input_format</span><span class="o">=</span><span class="s2">&quot;xyxy&quot;</span><span class="p">,</span>
+    <span class="n">bounding_box_format</span><span class="o">=</span><span class="s2">&quot;xyxy&quot;</span><span class="p">,</span>
+    <span class="n">max_boxes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a `tf.data.Dataset` from a dataframe.</span>
+
+<span class="sd">    Calling `image_objdetect_dataset_from_dataframe(dataframe)`</span>
+<span class="sd">    will return a `tf.data.Dataset` that yields batches of</span>
+<span class="sd">    images from the subdirectories `class_a` and `class_b`, together with labels</span>
+<span class="sd">    0 and 1 (0 corresponding to `class_a` and 1 corresponding to `class_b`).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      dataframe: Dataframe with list of images.</span>
+<span class="sd">      root_path: if it is not None, all paths are relative to it.</span>
+<span class="sd">      shuffle: Whether to shuffle the data. Default: True.</span>
+<span class="sd">          If set to False, sorts the data in alphanumeric order.</span>
+<span class="sd">      seed: Optional random seed for shuffling and transformations.</span>
+<span class="sd">      class_mode: String describing the encoding of classes. Options are:</span>
+<span class="sd">          - &#39;raw&#39;: means that the classes are not encoded</span>
+<span class="sd">          - &#39;int&#39;: means that the classes are encoded as integers</span>
+<span class="sd">              (e.g. for `sparse_categorical_crossentropy` loss).</span>
+<span class="sd">          - &#39;categorical&#39; means that the classes are</span>
+<span class="sd">              encoded as a categorical vector</span>
+<span class="sd">              (e.g. for `categorical_crossentropy` loss).</span>
+<span class="sd">          - None (no labels).</span>
+<span class="sd">      class_names: Only valid if &quot;class_mode&quot; is &#39;int&#39; or &#39;categorical&#39;. This is the explicit</span>
+<span class="sd">          list of class names used for the encoding.</span>
+<span class="sd">          (otherwise alphanumeric order is used).</span>
+<span class="sd">      color_mode: One of &quot;grayscale&quot;, &quot;rgb&quot;, &quot;rgba&quot;. Default: &quot;rgb&quot;.</span>
+<span class="sd">          Whether the images will be converted to</span>
+<span class="sd">          have 1, 3, or 4 channels.</span>
+<span class="sd">      pre_batching_processing: The operation(s) to apply before the data is put into a batch.</span>
+<span class="sd">      batch_size: Size of the batches of data. Default: 32.</span>
+<span class="sd">        If `None`, the data will not be batched</span>
+<span class="sd">        (the dataset will yield individual samples).</span>
+<span class="sd">      post_batching_processing: The operation(s) to apply after tha data has been batched.</span>
+<span class="sd">      do_normalization: If True, normalize the image in the range [0,1].</span>
+<span class="sd">      colname_image: column name for image file. Default: &#39;image&#39;.</span>
+<span class="sd">      colname_class: column name for class. Default: &#39;class&#39;.</span>
+<span class="sd">      colname_box: column names for box position. Default: [&quot;xmin&quot;, &quot;ymin&quot;, &quot;xmax&quot;, &quot;ymax&quot;].</span>
+<span class="sd">    Returns:</span>
+<span class="sd">      A `tf.data.Dataset` object.</span>
+
+<span class="sd">    Rules regarding labels format:</span>
+
+<span class="sd">      - if `class_mode` is `int`, the labels are an `int32` tensor of shape</span>
+<span class="sd">        `(batch_size,)`.</span>
+<span class="sd">      - if `class_mode` is `raw`, the classes are converted.</span>
+<span class="sd">      - if `class_mode` is `categorical`, the labels are a `float32` tensor</span>
+<span class="sd">        of shape `(batch_size, num_classes)`, representing a one-hot</span>
+<span class="sd">        encoding of the class index.</span>
+
+<span class="sd">    Rules regarding number of channels in the yielded images:</span>
+
+<span class="sd">      - if `color_mode` is `grayscale`,</span>
+<span class="sd">        there&#39;s 1 channel in the image tensors.</span>
+<span class="sd">      - if `color_mode` is `rgb`,</span>
+<span class="sd">        there are 3 channels in the image tensors.</span>
+<span class="sd">      - if `color_mode` is `rgba`,</span>
+<span class="sd">        there are 4 channels in the image tensors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">root_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_image</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_image</span><span class="p">]</span>
+        <span class="p">]</span>
+
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">class_mode</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;int&quot;</span><span class="p">,</span> <span class="s2">&quot;categorical&quot;</span><span class="p">}:</span>
+        <span class="k">if</span> <span class="n">class_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">class_names</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataframe</span><span class="p">[</span><span class="n">colname_class</span><span class="p">])))</span>
+
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">dataframe</span><span class="p">[</span><span class="n">colname_class</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">class_names</span><span class="p">)]</span>
+        <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_class</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">class_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">colname_class</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_names</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index_class</span><span class="p">,</span> <span class="n">name_class</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_names</span><span class="p">):</span>
+            <span class="n">num_boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dataframe</span><span class="p">[</span><span class="n">colname_class</span><span class="p">]</span> <span class="o">==</span> <span class="n">index_class</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;For class &#39;</span><span class="si">{</span><span class="n">name_class</span><span class="si">}</span><span class="s2">&#39;, there are </span><span class="si">{</span><span class="n">num_boxes</span><span class="si">}</span><span class="s2"> boxes.&quot;</span><span class="p">,</span>
+                <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">class_names</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;You can only pass `class_names` if &quot;</span>
+            <span class="s1">&#39;`class_mode` is &quot;int&quot; or &quot;categorical&quot;.&#39;</span>
+            <span class="sa">f</span><span class="s2">&quot;Received: class_mode=</span><span class="si">{</span><span class="n">class_mode</span><span class="si">}</span><span class="s2">, and &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;class_names=</span><span class="si">{</span><span class="n">class_names</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s2">&quot;rgb&quot;</span><span class="p">:</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="k">elif</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s2">&quot;rgba&quot;</span><span class="p">:</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">elif</span> <span class="n">color_mode</span> <span class="o">==</span> <span class="s2">&quot;grayscale&quot;</span><span class="p">:</span>
+        <span class="n">num_channels</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;`color_mode` must be one of {&quot;rgb&quot;, &quot;rgba&quot;, &quot;grayscale&quot;}. &#39;</span>
+            <span class="sa">f</span><span class="s2">&quot;Received: color_mode=</span><span class="si">{</span><span class="n">color_mode</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">load_fun_input</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_load_img</span><span class="p">,</span> <span class="n">num_channels</span><span class="o">=</span><span class="n">num_channels</span><span class="p">)</span>
+    <span class="n">load_fun_target</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+        <span class="n">bounding_box</span><span class="o">.</span><span class="n">convert_format</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">bounding_box_input_format</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">bounding_box_format</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">post_batching_processing</span> <span class="o">=</span> <span class="n">_update_post_batching_processing</span><span class="p">(</span>
+        <span class="n">post_batching_processing</span><span class="o">=</span><span class="n">post_batching_processing</span><span class="p">,</span>
+        <span class="n">do_normalization</span><span class="o">=</span><span class="n">do_normalization</span><span class="p">,</span>
+        <span class="n">dictname_input</span><span class="o">=</span><span class="n">IMAGES</span><span class="p">,</span>
+        <span class="n">dictname_target</span><span class="o">=</span><span class="n">BOUNDING_BOXES</span><span class="p">,</span>
+        <span class="n">max_boxes</span><span class="o">=</span><span class="n">max_boxes</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mf">1e6</span><span class="p">)</span>
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">frac</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="n">num_img</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataframe</span><span class="p">[</span><span class="n">colname_image</span><span class="p">]))</span>
+    <span class="n">class_dtype</span> <span class="o">=</span> <span class="s2">&quot;int64&quot;</span> <span class="k">if</span> <span class="n">class_mode</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;int&quot;</span><span class="p">,</span> <span class="s2">&quot;categorical&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="s2">&quot;float32&quot;</span>
+    <span class="n">class_shape</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">num_classes</span><span class="p">)</span> <span class="k">if</span> <span class="n">class_mode</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;categorical&quot;</span><span class="p">,</span> <span class="p">}</span> <span class="k">else</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+        <span class="n">_get_objdetect_generator</span><span class="p">,</span>
+        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+        <span class="n">colname_image</span><span class="o">=</span><span class="n">colname_image</span><span class="p">,</span>
+        <span class="n">colname_class</span><span class="o">=</span><span class="n">colname_class</span><span class="p">,</span>
+        <span class="n">colname_box</span><span class="o">=</span><span class="n">colname_box</span><span class="p">,</span>
+        <span class="n">class_mode</span><span class="o">=</span><span class="n">class_mode</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_generator</span><span class="p">(</span>
+        <span class="n">generator</span><span class="p">,</span>
+        <span class="n">output_signature</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">IMAGES</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
+            <span class="n">BOUNDING_BOXES</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;classes&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">class_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">class_dtype</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">assert_cardinality</span><span class="p">(</span><span class="n">num_img</span><span class="p">))</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset_from_dataframe</span><span class="p">(</span>
+        <span class="n">dataframe</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+        <span class="n">colname_input</span><span class="o">=</span><span class="n">IMAGES</span><span class="p">,</span>
+        <span class="n">colname_target</span><span class="o">=</span><span class="n">BOUNDING_BOXES</span><span class="p">,</span>
+        <span class="n">load_fun_input</span><span class="o">=</span><span class="n">load_fun_input</span><span class="p">,</span>
+        <span class="n">load_fun_target</span><span class="o">=</span><span class="n">load_fun_target</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+        <span class="n">pre_batching_operation</span><span class="o">=</span><span class="n">pre_batching_processing</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">post_batching_operation</span><span class="o">=</span><span class="n">post_batching_processing</span><span class="p">,</span>
+        <span class="n">dictname_input</span><span class="o">=</span><span class="n">IMAGES</span><span class="p">,</span>
+        <span class="n">dictname_target</span><span class="o">=</span><span class="n">BOUNDING_BOXES</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Users may need to reference `class_names`, `batch_size` and `root_path`</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">class_names</span> <span class="o">=</span> <span class="n">class_names</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">bounding_box_format</span> <span class="o">=</span> <span class="n">bounding_box_format</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">root_path</span> <span class="o">=</span> <span class="n">root_path</span>
+    <span class="k">return</span> <span class="n">dataset</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Davide Cozzolino.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
