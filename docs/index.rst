@@ -7,11 +7,12 @@ Welcome to easy-cv-dataset's documentation!
 ===========================================
 
 .. automodule:: easy_cv_dataset
-    :members:
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+
+   image
+   metrics
 
 
 Indices and tables
@@ -19,4 +20,4 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
+
