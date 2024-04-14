@@ -145,7 +145,7 @@ def _update_post_batching_processing(post_batching_processing, do_normalization,
             )
         else:
             post_batching_processing = to_tuple
-    elif do_normalization is None:
+    elif do_normalization:
         post_batching_processing = keras.Sequential(
             layers=[post_batching_processing, Rescaling(1 / 255.0), to_tuple]
         )
