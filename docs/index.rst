@@ -11,8 +11,7 @@ Welcome to easy-cv-dataset's documentation!
 .. toctree::
    :maxdepth: 1
 
-   image
-   metrics
+   api/index
 
 
 Indices and tables
