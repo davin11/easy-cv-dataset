@@ -42,8 +42,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Image Dataset</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -93,7 +92,7 @@
 <span class="kn">from</span> <span class="nn">keras.callbacks</span> <span class="kn">import</span> <span class="n">Callback</span>
 
 <div class="viewcode-block" id="compute_mAP_metrics">
-<a class="viewcode-back" href="../../../metrics.html#easy_cv_dataset.metrics.compute_mAP_metrics">[docs]</a>
+<a class="viewcode-back" href="../../../api/metrics.html#easy_cv_dataset.metrics.compute_mAP_metrics">[docs]</a>
 <span class="k">def</span> <span class="nf">compute_mAP_metrics</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">bounding_box_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iou_th</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">sentinel</span><span class="o">=-</span><span class="mi">1</span>
 <span class="p">):</span>
@@ -195,7 +194,7 @@
 
 
 <div class="viewcode-block" id="EvaluateMAPmetricsCallback">
-<a class="viewcode-back" href="../../../metrics.html#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback">[docs]</a>
+<a class="viewcode-back" href="../../../api/metrics.html#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback">[docs]</a>
 <span class="k">class</span> <span class="nc">EvaluateMAPmetricsCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">bounding_box_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iou_th</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -204,7 +203,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">iou_th</span> <span class="o">=</span> <span class="n">iou_th</span>
 
 <div class="viewcode-block" id="EvaluateMAPmetricsCallback.on_epoch_end">
-<a class="viewcode-back" href="../../../metrics.html#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback.on_epoch_end">[docs]</a>
+<a class="viewcode-back" href="../../../api/metrics.html#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback.on_epoch_end">[docs]</a>
     <span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">):</span>
         <span class="n">metrics</span> <span class="o">=</span> <span class="n">compute_mAP_metrics</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
