@@ -98,6 +98,9 @@ def _load_map(path, class_mode, num_classes):
     if class_mode == "binary":
         y = tf.cast(y, tf.float32) / 255.0
         y = tf.expand_dims(y, -1)
+    elif class_mode == "binary_categorical":
+        y = tf.cast(y, tf.float32) / 255.0
+        y = tf.stack((1.0-y, y), -1)
     elif class_mode == "int":
         y = tf.cast(y, "int64")
     elif class_mode == "categorical":
@@ -343,6 +346,9 @@ def image_segmentation_dataset_from_dataframe(
               (e.g. for `sparse_categorical_crossentropy` loss).
           - 'categorical' means that the classes are
               encoded as a categorical vector
+              (e.g. for `categorical_crossentropy` loss).
+          - 'binary_categorical' means that the classes are
+              encoded as a categorical vector in case of two classes
               (e.g. for `categorical_crossentropy` loss).
       class_names: Only valid if "class_mode" is 'int' or 'categorical'. This is the explicit
           list of class names used for the encoding.
