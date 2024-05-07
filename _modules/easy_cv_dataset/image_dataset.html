@@ -173,6 +173,9 @@
     <span class="k">if</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;binary&quot;</span><span class="p">:</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;binary_categorical&quot;</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="mf">1.0</span><span class="o">-</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;int&quot;</span><span class="p">:</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s2">&quot;int64&quot;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;categorical&quot;</span><span class="p">:</span>
@@ -423,6 +426,9 @@
 <span class="sd">              (e.g. for `sparse_categorical_crossentropy` loss).</span>
 <span class="sd">          - &#39;categorical&#39; means that the classes are</span>
 <span class="sd">              encoded as a categorical vector</span>
+<span class="sd">              (e.g. for `categorical_crossentropy` loss).</span>
+<span class="sd">          - &#39;binary_categorical&#39; means that the classes are</span>
+<span class="sd">              encoded as a categorical vector in case of two classes</span>
 <span class="sd">              (e.g. for `categorical_crossentropy` loss).</span>
 <span class="sd">      class_names: Only valid if &quot;class_mode&quot; is &#39;int&#39; or &#39;categorical&#39;. This is the explicit</span>
 <span class="sd">          list of class names used for the encoding.</span>
