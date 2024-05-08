@@ -212,7 +212,7 @@ class Unet(Task):
 
         inputs = backbone.input
 
-        extractor_levels = ["P0", "P1", "P2", "P3", "P4", "P5"]
+        extractor_levels = ["P0", "P1", "P2", "P3", "P4"]
         extractor_levels = [_ for _ in extractor_levels if _ in backbone.pyramid_level_inputs]
         extractor_layer_names = [
             backbone.pyramid_level_inputs[i] for i in extractor_levels
@@ -222,10 +222,10 @@ class Unet(Task):
         )
 
         backbone_features = feature_extractor(inputs)
-        if "P5" in backbone_features:
-            x = backbone_features["P5"]
-            levels = 5
-        elif "P4" in backbone_features:
+        #if "P5" in backbone_features:
+        #    x = backbone_features["P5"]
+        #    levels = 5
+        if "P4" in backbone_features:
             x = backbone_features["P4"]
             levels = 4
         elif "P3" in backbone_features:
