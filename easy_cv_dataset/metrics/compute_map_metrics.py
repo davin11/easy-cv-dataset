@@ -98,7 +98,10 @@ def compute_mAP_metrics(
     list_classes = np.asarray(list_classes)
     list_predictions = np.asarray(list_predictions)
     list_scores = np.asarray(list_scores)
-    min_score = np.nanmin(list_scores)
+    if np.all(np.isnan(list_scores)):
+        min_score = 0.0
+    else:
+        min_score = np.nanmin(list_scores)
     list_scores[np.isnan(list_scores)] = min_score - 1.0
 
     set_classes = sorted(list(set(list_classes)))
