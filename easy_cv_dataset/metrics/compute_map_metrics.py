@@ -115,8 +115,12 @@ def compute_mAP_metrics(
             ths = np.concatenate((ths, [np.PINF]), 0)
             precision[ths < min_score] = 0
             ap[index] = -np.sum(np.diff(recall) * np.array(precision)[:-1])
-
-        name = class_names[int(c)] if class_names else c
+            
+        try:
+            name = class_names[int(c)] if class_names else c
+        except:
+            name = c
+        
         print("%3d) AP of %20s = %7.5f" % (index, name, ap[index]))
 
     return np.nanmean(ap)
