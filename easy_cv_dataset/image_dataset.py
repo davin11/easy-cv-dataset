@@ -26,7 +26,7 @@ from .utils import dataframe_from_directory
 from .utils import dataset_from_dataframe
 from .layers import ToTuple
 from keras_cv import bounding_box
-from keras_cv.layers import Rescaling
+from keras_cv.layers import Rescaling, Augmenter
 
 IMAGES = "images"
 LABELS = "labels"
@@ -143,17 +143,17 @@ def _update_post_batching_processing(post_batching_processing, do_normalization,
 
     if post_batching_processing is None:
         if do_normalization:
-            post_batching_processing = keras.Sequential(
+            post_batching_processing = Augmenter(
                 layers=[Rescaling(1 / 255.0), to_tuple]
             )
         else:
             post_batching_processing = to_tuple
     elif do_normalization:
-        post_batching_processing = keras.Sequential(
+        post_batching_processing = Augmenter(
             layers=[post_batching_processing, Rescaling(1 / 255.0), to_tuple]
         )
     else:
-        post_batching_processing = keras.Sequential(
+        post_batching_processing = Augmenter(
             layers=[post_batching_processing, to_tuple]
         )
     return post_batching_processing
