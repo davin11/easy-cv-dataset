@@ -6,7 +6,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>easy_cv_dataset.image_dataset &mdash; easy-cv-dataset 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
@@ -85,18 +85,18 @@
 <span class="sd">&quot;&quot;&quot;Keras image dataset loading utilities.&quot;&quot;&quot;</span>
 
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">pandas</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
-<span class="kn">import</span> <span class="nn">keras</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">dataframe_from_directory</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">dataset_from_dataframe</span>
-<span class="kn">from</span> <span class="nn">.layers</span> <span class="kn">import</span> <span class="n">ToTuple</span>
-<span class="kn">from</span> <span class="nn">keras_cv</span> <span class="kn">import</span> <span class="n">bounding_box</span>
-<span class="kn">from</span> <span class="nn">keras_cv.layers</span> <span class="kn">import</span> <span class="n">Rescaling</span><span class="p">,</span> <span class="n">Augmenter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataframe_from_directory</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataset_from_dataframe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToTuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keras_cv</span><span class="w"> </span><span class="kn">import</span> <span class="n">bounding_box</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keras_cv.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Rescaling</span><span class="p">,</span> <span class="n">Augmenter</span>
 
 <span class="n">IMAGES</span> <span class="o">=</span> <span class="s2">&quot;images&quot;</span>
 <span class="n">LABELS</span> <span class="o">=</span> <span class="s2">&quot;labels&quot;</span>
@@ -108,7 +108,7 @@
 
 <div class="viewcode-block" id="image_dataframe_from_directory">
 <a class="viewcode-back" href="../../api/image.html#easy_cv_dataset.image_dataframe_from_directory">[docs]</a>
-<span class="k">def</span> <span class="nf">image_dataframe_from_directory</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">image_dataframe_from_directory</span><span class="p">(</span>
     <span class="n">directory</span><span class="p">,</span> <span class="n">follow_links</span><span class="o">=</span><span class="kc">False</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a `pandas.DataFrame` from image files in a directory.</span>
@@ -117,11 +117,17 @@
 
 <span class="sd">    ```</span>
 <span class="sd">    main_directory/</span>
+
 <span class="sd">    ...class_a/</span>
+<span class="sd">    </span>
 <span class="sd">    ......a_image_1.jpg</span>
+<span class="sd">    </span>
 <span class="sd">    ......a_image_2.jpg</span>
+<span class="sd">    </span>
 <span class="sd">    ...class_b/</span>
+<span class="sd">    </span>
 <span class="sd">    ......b_image_1.jpg</span>
+<span class="sd">    </span>
 <span class="sd">    ......b_image_2.jpg</span>
 <span class="sd">    ```</span>
 
@@ -150,7 +156,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_load_img</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">num_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_img</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">num_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load an image from a path and resize it.&quot;&quot;&quot;</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_image</span><span class="p">(</span>
@@ -159,13 +165,13 @@
     <span class="k">return</span> <span class="n">img</span>
 
 
-<span class="k">def</span> <span class="nf">_load_map_np</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_map_np</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">decode</span><span class="p">()),</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_load_map</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_map</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">numpy_function</span><span class="p">(</span><span class="n">_load_map_np</span><span class="p">,</span> <span class="p">[</span><span class="n">path</span><span class="p">,],</span> <span class="n">Tout</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
     <span class="n">y</span><span class="o">.</span><span class="n">set_shape</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;binary&quot;</span><span class="p">:</span>
@@ -189,7 +195,7 @@
     <span class="k">return</span> <span class="n">y</span>
 
 
-<span class="k">def</span> <span class="nf">_get_fun_load_class</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_fun_load_class</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
     <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">class_mode</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="n">class_mode</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">class_mode</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">class_mode</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
@@ -208,7 +214,7 @@
         <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_update_post_batching_processing</span><span class="p">(</span><span class="n">post_batching_processing</span><span class="p">,</span> <span class="n">do_normalization</span><span class="p">,</span> <span class="n">dictname_input</span><span class="p">,</span> <span class="n">dictname_target</span><span class="p">,</span> <span class="n">max_boxes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_update_post_batching_processing</span><span class="p">(</span><span class="n">post_batching_processing</span><span class="p">,</span> <span class="n">do_normalization</span><span class="p">,</span> <span class="n">dictname_input</span><span class="p">,</span> <span class="n">dictname_target</span><span class="p">,</span> <span class="n">max_boxes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">to_tuple</span> <span class="o">=</span> <span class="n">ToTuple</span><span class="p">(</span><span class="n">dictname_input</span><span class="o">=</span><span class="n">dictname_input</span><span class="p">,</span>
                        <span class="n">dictname_target</span><span class="o">=</span><span class="n">dictname_target</span><span class="p">,</span>
                        <span class="n">max_boxes</span><span class="o">=</span><span class="n">max_boxes</span>
@@ -234,7 +240,7 @@
 
 <div class="viewcode-block" id="image_classification_dataset_from_dataframe">
 <a class="viewcode-back" href="../../api/image.html#easy_cv_dataset.image_classification_dataset_from_dataframe">[docs]</a>
-<span class="k">def</span> <span class="nf">image_classification_dataset_from_dataframe</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">image_classification_dataset_from_dataframe</span><span class="p">(</span>
     <span class="n">dataframe</span><span class="p">,</span>
     <span class="n">root_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -391,7 +397,7 @@
 
 <div class="viewcode-block" id="image_segmentation_dataset_from_dataframe">
 <a class="viewcode-back" href="../../api/image.html#easy_cv_dataset.image_segmentation_dataset_from_dataframe">[docs]</a>
-<span class="k">def</span> <span class="nf">image_segmentation_dataset_from_dataframe</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">image_segmentation_dataset_from_dataframe</span><span class="p">(</span>
     <span class="n">dataframe</span><span class="p">,</span>
     <span class="n">class_names</span><span class="p">,</span>
     <span class="n">root_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -526,7 +532,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_get_objdetect_generator</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_objdetect_generator</span><span class="p">(</span>
     <span class="n">dataframe</span><span class="p">,</span> <span class="n">colname_image</span><span class="p">,</span> <span class="n">colname_class</span><span class="p">,</span> <span class="n">colname_box</span><span class="p">,</span> <span class="n">class_mode</span><span class="p">,</span> <span class="n">num_classes</span>
 <span class="p">):</span>
     <span class="n">list_img</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dataframe</span><span class="p">[</span><span class="n">colname_image</span><span class="p">]))</span>
@@ -544,7 +550,7 @@
 
 <div class="viewcode-block" id="image_objdetect_dataset_from_dataframe">
 <a class="viewcode-back" href="../../api/image.html#easy_cv_dataset.image_objdetect_dataset_from_dataframe">[docs]</a>
-<span class="k">def</span> <span class="nf">image_objdetect_dataset_from_dataframe</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">image_objdetect_dataset_from_dataframe</span><span class="p">(</span>
     <span class="n">dataframe</span><span class="p">,</span>
     <span class="n">root_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
