@@ -197,12 +197,12 @@ class Unet(Task):
         num_classes,
         backbone=None,
         filters=64,
+        activation='softmax',
         use_batchnorm=False,
         **kwargs,
     ):
 
         if not isinstance(backbone, keras.layers.Layer) or not isinstance(
-            backbone, keras.Model
         ):
             raise ValueError(
                 "Argument `backbone` must be a `keras.layers.Layer` instance "
@@ -243,10 +243,8 @@ class Unet(Task):
             skip = backbone_features[f"P{l}"] if f"P{l}" in backbone_features else None
             x = DecoderUpsampling(fn, use_batchnorm=use_batchnorm, name=f'decoder{l}')(x, skip)
 
-        if num_classes == 1:
+        if (num_classes == 1) and (activation == 'softmax'):
             activation = 'sigmoid'
-        else:
-            activation = 'softmax'
 
         outputs = keras.layers.Conv2D(num_classes, (3, 3), activation=activation, padding='same',
                                kernel_initializer='he_normal')(x)
