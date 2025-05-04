@@ -202,8 +202,7 @@ class Unet(Task):
         **kwargs,
     ):
 
-        if not isinstance(backbone, keras.layers.Layer) or not isinstance(
-        ):
+        if not isinstance(backbone, keras.layers.Layer) or not isinstance(backbone, keras.Model):
             raise ValueError(
                 "Argument `backbone` must be a `keras.layers.Layer` instance "
                 f" or `keras.Model`. Received instead "
