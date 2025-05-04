@@ -112,7 +112,7 @@ def compute_mAP_metrics(
             precision, recall, ths = precision_recall_curve(
                 list_predictions[valid], list_scores[valid]
             )
-            ths = np.concatenate((ths, [np.PINF]), 0)
+            ths = np.concatenate((ths, [np.inf]), 0)
             precision[ths < min_score] = 0
             ap[index] = -np.sum(np.diff(recall) * np.array(precision)[:-1])
             
