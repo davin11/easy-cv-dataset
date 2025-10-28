@@ -18,7 +18,7 @@ easy_cv_dataset.
 A library for dataset loading.
 """
 
-__version__ = "0.0.1"
+__version__ = "0.2.0"
 
 from .image_dataset import image_dataframe_from_directory
 from .image_dataset import image_classification_dataset_from_dataframe

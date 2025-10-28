@@ -24,9 +24,9 @@ from PIL import Image
 import keras
 from .utils import dataframe_from_directory
 from .utils import dataset_from_dataframe
-from .layers import ToTuple
-from keras_cv import bounding_box
-from keras_cv.layers import Rescaling, Augmenter
+from .layers import ToTuple, Rescaling
+from keras.utils.bounding_boxes import convert_format as convert_boxes_format
+from keras.layers import Pipeline
 
 IMAGES = "images"
 LABELS = "labels"
@@ -44,19 +44,13 @@ def image_dataframe_from_directory(
     If your directory structure is:
 
     ```
-    main_directory/
-
-    ...class_a/
-    
-    ......a_image_1.jpg
-    
-    ......a_image_2.jpg
-    
-    ...class_b/
-    
-    ......b_image_1.jpg
-    
-    ......b_image_2.jpg
+    main_directory/  
+    ...class_a/  
+    ......a_image_1.jpg  
+    ......a_image_2.jpg  
+    ...class_b/  
+    ......b_image_1.jpg  
+    ......b_image_2.jpg  
     ```
 
     Then calling `image_dataframe_from_directory(main_directory)` will 
@@ -149,17 +143,17 @@ def _update_post_batching_processing(post_batching_processing, do_normalization,
 
     if post_batching_processing is None:
         if do_normalization:
-            post_batching_processing = Augmenter(
+            post_batching_processing = Pipeline(
                 layers=[Rescaling(1 / 255.0), to_tuple]
             )
         else:
             post_batching_processing = to_tuple
     elif do_normalization:
-        post_batching_processing = Augmenter(
+        post_batching_processing = Pipeline(
             layers=[post_batching_processing, Rescaling(1 / 255.0), to_tuple]
         )
     else:
-        post_batching_processing = Augmenter(
+        post_batching_processing = Pipeline(
             layers=[post_batching_processing, to_tuple]
         )
     return post_batching_processing
@@ -593,7 +587,7 @@ def image_objdetect_dataset_from_dataframe(
 
     load_fun_input = partial(_load_img, num_channels=num_channels)
     load_fun_target = partial(
-        bounding_box.convert_format,
+        convert_boxes_format,
         source=bounding_box_input_format,
         target=bounding_box_format,
         dtype="float32",

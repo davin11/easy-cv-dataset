@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from sklearn.metrics import precision_recall_curve
-from keras_cv import bounding_box
+from keras.utils.bounding_boxes import compute_iou
 import tensorflow as tf
 import numpy as np
 from keras.utils import Progbar
@@ -59,7 +59,7 @@ def compute_mAP_metrics(
             detection_classes = tf.cast(boxes_pred_image["classes"][detection_valid],
                                         target_classes.dtype)
 
-            detection_iou = bounding_box.compute_iou(
+            detection_iou = compute_iou(
                 boxes_pred_image["boxes"][detection_valid],
                 boxes_gt["boxes"][index_image],
                 bounding_box_format=bounding_box_format,

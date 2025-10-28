@@ -13,5 +13,5 @@
 # limitations under the License.
 
 from .to_tuple import ToTuple
-from .central_crop import CentralCrop
+from .rescaling import Rescaling
 from .random_affine_transf import RandomAffineTransf
