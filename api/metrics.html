@@ -45,8 +45,14 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="image.html">Image Dataset</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Metrics</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#compute-map-metrics">compute_mAP_metrics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#evaluatemapmetricscallback">EvaluateMAPmetricsCallback</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compute-map-metrics">compute_mAP_metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_cv_dataset.metrics.compute_mAP_metrics"><code class="docutils literal notranslate"><span class="pre">compute_mAP_metrics()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#evaluatemapmetricscallback">EvaluateMAPmetricsCallback</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback"><code class="docutils literal notranslate"><span class="pre">EvaluateMAPmetricsCallback</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -78,13 +84,43 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="metrics">
-<h1>Metrics<a class="headerlink" href="#metrics" title="Link to this heading"></a></h1>
+  <section id="module-easy_cv_dataset.metrics">
+<span id="metrics"></span><h1>Metrics<a class="headerlink" href="#module-easy_cv_dataset.metrics" title="Link to this heading"></a></h1>
 <section id="compute-map-metrics">
 <h2>compute_mAP_metrics<a class="headerlink" href="#compute-map-metrics" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_cv_dataset.metrics.compute_mAP_metrics">
+<span class="sig-prename descclassname"><span class="pre">easy_cv_dataset.metrics.</span></span><span class="sig-name descname"><span class="pre">compute_mAP_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounding_box_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentinel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easy_cv_dataset/metrics/compute_map_metrics.html#compute_mAP_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easy_cv_dataset.metrics.compute_mAP_metrics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 <section id="evaluatemapmetricscallback">
 <h2>EvaluateMAPmetricsCallback<a class="headerlink" href="#evaluatemapmetricscallback" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="easy_cv_dataset.metrics.EvaluateMAPmetricsCallback">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">easy_cv_dataset.metrics.</span></span><span class="sig-name descname"><span class="pre">EvaluateMAPmetricsCallback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounding_box_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easy_cv_dataset/metrics/compute_map_metrics.html#EvaluateMAPmetricsCallback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="easy_cv_dataset.metrics.EvaluateMAPmetricsCallback.on_epoch_end">
+<span class="sig-name descname"><span class="pre">on_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easy_cv_dataset/metrics/compute_map_metrics.html#EvaluateMAPmetricsCallback.on_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback.on_epoch_end" title="Link to this definition"></a></dt>
+<dd><p>Called at the end of an epoch.</p>
+<p>Subclasses should override for any actions to run. This function should
+only be called during TRAIN mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epoch</strong> – Integer, index of epoch.</p></li>
+<li><p><strong>logs</strong> – Dict, metric results for this training epoch, and for the
+validation epoch if validation is performed. Validation result
+keys are prefixed with <cite>val_</cite>. For training epoch, the values of
+the <cite>Model</cite>’s metrics are returned. Example:
+<cite>{‘loss’: 0.2, ‘accuracy’: 0.7}</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 

@@ -45,10 +45,22 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Image Dataset</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#image-dataframe-from-directory">image_dataframe_from_directory</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#image-classification-dataset-from-dataframe">image_classification_dataset_from_dataframe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#image-segmentation-dataset-from-dataframe">image_segmentation_dataset_from_dataframe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#image-objdetect-dataset-from-dataframe">image_objdetect_dataset_from_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#image-dataframe-from-directory">image_dataframe_from_directory</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_cv_dataset.image_dataframe_from_directory"><code class="docutils literal notranslate"><span class="pre">image_dataframe_from_directory()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#image-classification-dataset-from-dataframe">image_classification_dataset_from_dataframe</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_cv_dataset.image_classification_dataset_from_dataframe"><code class="docutils literal notranslate"><span class="pre">image_classification_dataset_from_dataframe()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#image-segmentation-dataset-from-dataframe">image_segmentation_dataset_from_dataframe</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_cv_dataset.image_segmentation_dataset_from_dataframe"><code class="docutils literal notranslate"><span class="pre">image_segmentation_dataset_from_dataframe()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#image-objdetect-dataset-from-dataframe">image_objdetect_dataset_from_dataframe</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#easy_cv_dataset.image_objdetect_dataset_from_dataframe"><code class="docutils literal notranslate"><span class="pre">image_objdetect_dataset_from_dataframe()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="metrics.html">Metrics</a></li>
@@ -81,19 +93,282 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="image-dataset">
-<h1>Image Dataset<a class="headerlink" href="#image-dataset" title="Link to this heading"></a></h1>
+  <section id="module-easy_cv_dataset.image_dataset">
+<span id="image-dataset"></span><h1>Image Dataset<a class="headerlink" href="#module-easy_cv_dataset.image_dataset" title="Link to this heading"></a></h1>
+<p>Keras image dataset loading utilities.</p>
 <section id="image-dataframe-from-directory">
 <h2>image_dataframe_from_directory<a class="headerlink" href="#image-dataframe-from-directory" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_cv_dataset.image_dataframe_from_directory">
+<span class="sig-prename descclassname"><span class="pre">easy_cv_dataset.</span></span><span class="sig-name descname"><span class="pre">image_dataframe_from_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">follow_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easy_cv_dataset/image_dataset.html#image_dataframe_from_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easy_cv_dataset.image_dataframe_from_directory" title="Link to this definition"></a></dt>
+<dd><p>Generates a <cite>pandas.DataFrame</cite> from image files in a directory.</p>
+<p>If your directory structure is:</p>
+<p><code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">main_directory/</span>
+<span class="pre">...class_a/</span>
+<span class="pre">......a_image_1.jpg</span>
+<span class="pre">......a_image_2.jpg</span>
+<span class="pre">...class_b/</span>
+<span class="pre">......b_image_1.jpg</span>
+<span class="pre">......b_image_2.jpg</span>
+<span class="pre">`</span></code></p>
+<p>Then calling <cite>image_dataframe_from_directory(main_directory)</cite> will
+return a <cite>pandas.DataFrame</cite> that yields batches of
+images from the subdirectories <cite>class_a</cite> and <cite>class_b</cite>.</p>
+<p>Supported image formats: jpeg, png, bmp, tiff.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory</strong> – Directory where the data is located.</p></li>
+<li><p><strong>follow_links</strong> – Whether to visit subdirectories pointed to by symlinks.
+Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <cite>pandas.DataFrame</cite> object.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="image-classification-dataset-from-dataframe">
 <h2>image_classification_dataset_from_dataframe<a class="headerlink" href="#image-classification-dataset-from-dataframe" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_cv_dataset.image_classification_dataset_from_dataframe">
+<span class="sig-prename descclassname"><span class="pre">easy_cv_dataset.</span></span><span class="sig-name descname"><span class="pre">image_classification_dataset_from_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'categorical'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rgb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_batching_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_batching_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colname_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colname_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'class'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easy_cv_dataset/image_dataset.html#image_classification_dataset_from_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easy_cv_dataset.image_classification_dataset_from_dataframe" title="Link to this definition"></a></dt>
+<dd><p>Generates a <cite>tf.data.Dataset</cite> from a dataframe.</p>
+<p>Then calling <cite>image_dataset_from_dataframe(dataframe)</cite>
+will return a <cite>tf.data.Dataset</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> – Dataframe with list of images.</p></li>
+<li><p><strong>root_path</strong> – if it is not None, all paths are relative to it.</p></li>
+<li><p><strong>shuffle</strong> – Whether to shuffle the data. Default: True.
+If set to False, sorts the data in alphanumeric order.</p></li>
+<li><p><strong>seed</strong> – Optional random seed for shuffling and transformations.</p></li>
+<li><p><strong>class_mode</strong> – <p>String describing the encoding of classes. Options are:
+- ‘raw’: means that the classes are not encoded
+- ‘int’: means that the classes are encoded as integers</p>
+<blockquote>
+<div><p>(e.g. for <cite>sparse_categorical_crossentropy</cite> loss).</p>
+</div></blockquote>
+<ul>
+<li><dl class="simple">
+<dt>’categorical’ means that the classes are</dt><dd><p>encoded as a categorical vector
+(e.g. for <cite>categorical_crossentropy</cite> loss).</p>
+</dd>
+</dl>
+</li>
+<li><p>None (no labels).</p></li>
+</ul>
+</p></li>
+<li><p><strong>class_names</strong> – Only valid if “class_mode” is ‘int’ or ‘categorical’. This is the explicit
+list of class names used for the encoding.
+(otherwise alphanumeric order is used).</p></li>
+<li><p><strong>color_mode</strong> – One of “grayscale”, “rgb”, “rgba”. Default: “rgb”.
+Whether the images will be converted to
+have 1, 3, or 4 channels.</p></li>
+<li><p><strong>pre_batching_processing</strong> – The operation(s) to apply before the data is put into a batch.</p></li>
+<li><p><strong>batch_size</strong> – Size of the batches of data. Default: None.
+If <cite>None</cite>, the data will not be batched
+(the dataset will yield individual samples).</p></li>
+<li><p><strong>post_batching_processing</strong> – The operation(s) to apply after tha data has been batched.</p></li>
+<li><p><strong>do_normalization</strong> – If True, normalize the image in the range [0,1].</p></li>
+<li><p><strong>colname_image</strong> – column name for image file. Default: ‘image’.</p></li>
+<li><p><strong>colname_class:</strong> – column name for class. Default: ‘class’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <cite>tf.data.Dataset</cite> object.</p>
+</dd>
+</dl>
+<p>Rules regarding labels format:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>if <cite>class_mode</cite> is <cite>int</cite>, the labels are an <cite>int32</cite> tensor of shape <cite>(batch_size,)</cite>.</p></li>
+<li><p>if <cite>class_mode</cite> is <cite>raw</cite>, the classes are not converted.</p></li>
+<li><p>if <cite>class_mode</cite> is <cite>categorical</cite>, the labels are a <cite>float32</cite> tensor
+of shape <cite>(batch_size, num_classes)</cite>, representing a one-hot
+encoding of the class index.</p></li>
+</ul>
+</div></blockquote>
+<p>Rules regarding number of channels in the yielded images:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>if <cite>color_mode</cite> is <cite>grayscale</cite>,
+there’s 1 channel in the image tensors.</p></li>
+<li><p>if <cite>color_mode</cite> is <cite>rgb</cite>,
+there are 3 channels in the image tensors.</p></li>
+<li><p>if <cite>color_mode</cite> is <cite>rgba</cite>,
+there are 4 channels in the image tensors.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
 </section>
 <section id="image-segmentation-dataset-from-dataframe">
 <h2>image_segmentation_dataset_from_dataframe<a class="headerlink" href="#image-segmentation-dataset-from-dataframe" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_cv_dataset.image_segmentation_dataset_from_dataframe">
+<span class="sig-prename descclassname"><span class="pre">easy_cv_dataset.</span></span><span class="sig-name descname"><span class="pre">image_segmentation_dataset_from_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'categorical'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rgb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_batching_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_batching_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colname_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colname_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'segmentation_mask'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easy_cv_dataset/image_dataset.html#image_segmentation_dataset_from_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easy_cv_dataset.image_segmentation_dataset_from_dataframe" title="Link to this definition"></a></dt>
+<dd><p>Generates a <cite>tf.data.Dataset</cite> from a dataframe.</p>
+<p>Calling <cite>image_segmentation_dataset_from_dataframe(dataframe)</cite>
+will return a <cite>tf.data.Dataset</cite> that yields batches of
+images from the subdirectories <cite>class_a</cite> and <cite>class_b</cite>, together with labels
+0 and 1 (0 corresponding to <cite>class_a</cite> and 1 corresponding to <cite>class_b</cite>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> – Dataframe with list of images.</p></li>
+<li><p><strong>root_path</strong> – if it is not None, all paths are relative to it.</p></li>
+<li><p><strong>shuffle</strong> – Whether to shuffle the data. Default: True.
+If set to False, sorts the data in alphanumeric order.</p></li>
+<li><p><strong>seed</strong> – Optional random seed for shuffling and transformations.</p></li>
+<li><p><strong>class_mode</strong> – <p>String describing the encoding of classes. Options are:
+- ‘int’: means that the classes are encoded as integers</p>
+<blockquote>
+<div><p>(e.g. for <cite>sparse_categorical_crossentropy</cite> loss).</p>
+</div></blockquote>
+<ul>
+<li><dl class="simple">
+<dt>’categorical’ means that the classes are</dt><dd><p>encoded as a categorical vector
+(e.g. for <cite>categorical_crossentropy</cite> loss).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>’binary_categorical’ means that the classes are</dt><dd><p>encoded as a categorical vector in case of two classes
+(e.g. for <cite>categorical_crossentropy</cite> loss).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p></li>
+<li><p><strong>class_names</strong> – Only valid if “class_mode” is ‘int’ or ‘categorical’. This is the explicit
+list of class names used for the encoding.
+(otherwise alphanumeric order is used).</p></li>
+<li><p><strong>color_mode</strong> – One of “grayscale”, “rgb”, “rgba”. Default: “rgb”.
+Whether the images will be converted to
+have 1, 3, or 4 channels.</p></li>
+<li><p><strong>pre_batching_processing</strong> – The operation(s) to apply before the data is put into a batch.</p></li>
+<li><p><strong>batch_size</strong> – Size of the batches of data. Default: None.
+If <cite>None</cite>, the data will not be batched
+(the dataset will yield individual samples).</p></li>
+<li><p><strong>post_batching_processing</strong> – The operation(s) to apply after tha data has been batched.</p></li>
+<li><p><strong>do_normalization</strong> – If True, normalize the image in the range [0,1].</p></li>
+<li><p><strong>colname_image</strong> – column name for image file. Default: ‘image’.</p></li>
+<li><p><strong>colname_mask</strong> – column name for mask file. Default: ‘segmentation_mask’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <cite>tf.data.Dataset</cite> object.</p>
+</dd>
+</dl>
+<p>Rules regarding labels format:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>if <cite>class_mode</cite> is <cite>int</cite>, the labels are an <cite>int32</cite> tensor of shape
+<cite>(batch_size,)</cite>.</p></li>
+<li><p>if <cite>class_mode</cite> is <cite>raw</cite>, the classes are converted.</p></li>
+<li><p>if <cite>class_mode</cite> is <cite>categorical</cite>, the labels are a <cite>float32</cite> tensor
+of shape <cite>(batch_size, num_classes)</cite>, representing a one-hot
+encoding of the class index.</p></li>
+</ul>
+</div></blockquote>
+<p>Rules regarding number of channels in the yielded images:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>if <cite>color_mode</cite> is <cite>grayscale</cite>,
+there’s 1 channel in the image tensors.</p></li>
+<li><p>if <cite>color_mode</cite> is <cite>rgb</cite>,
+there are 3 channels in the image tensors.</p></li>
+<li><p>if <cite>color_mode</cite> is <cite>rgba</cite>,
+there are 4 channels in the image tensors.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
 </section>
 <section id="image-objdetect-dataset-from-dataframe">
 <h2>image_objdetect_dataset_from_dataframe<a class="headerlink" href="#image-objdetect-dataset-from-dataframe" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="easy_cv_dataset.image_objdetect_dataset_from_dataframe">
+<span class="sig-prename descclassname"><span class="pre">easy_cv_dataset.</span></span><span class="sig-name descname"><span class="pre">image_objdetect_dataset_from_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rgb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_batching_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_batching_processing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colname_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colname_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'class'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colname_box</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['xmin',</span> <span class="pre">'ymin',</span> <span class="pre">'xmax',</span> <span class="pre">'ymax']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounding_box_input_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'xyxy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounding_box_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'xyxy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_boxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easy_cv_dataset/image_dataset.html#image_objdetect_dataset_from_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easy_cv_dataset.image_objdetect_dataset_from_dataframe" title="Link to this definition"></a></dt>
+<dd><p>Generates a <cite>tf.data.Dataset</cite> from a dataframe.</p>
+<p>Calling <cite>image_objdetect_dataset_from_dataframe(dataframe)</cite>
+will return a <cite>tf.data.Dataset</cite> that yields batches of
+images from the subdirectories <cite>class_a</cite> and <cite>class_b</cite>, together with labels
+0 and 1 (0 corresponding to <cite>class_a</cite> and 1 corresponding to <cite>class_b</cite>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> – Dataframe with list of images.</p></li>
+<li><p><strong>root_path</strong> – if it is not None, all paths are relative to it.</p></li>
+<li><p><strong>shuffle</strong> – Whether to shuffle the data. Default: True.
+If set to False, sorts the data in alphanumeric order.</p></li>
+<li><p><strong>seed</strong> – Optional random seed for shuffling and transformations.</p></li>
+<li><p><strong>class_mode</strong> – <p>String describing the encoding of classes. Options are:
+- ‘raw’: means that the classes are not encoded
+- ‘int’: means that the classes are encoded as integers</p>
+<blockquote>
+<div><p>(e.g. for <cite>sparse_categorical_crossentropy</cite> loss).</p>
+</div></blockquote>
+<ul>
+<li><dl class="simple">
+<dt>’categorical’ means that the classes are</dt><dd><p>encoded as a categorical vector
+(e.g. for <cite>categorical_crossentropy</cite> loss).</p>
+</dd>
+</dl>
+</li>
+<li><p>None (no labels).</p></li>
+</ul>
+</p></li>
+<li><p><strong>class_names</strong> – Only valid if “class_mode” is ‘int’ or ‘categorical’. This is the explicit
+list of class names used for the encoding.
+(otherwise alphanumeric order is used).</p></li>
+<li><p><strong>color_mode</strong> – One of “grayscale”, “rgb”, “rgba”. Default: “rgb”.
+Whether the images will be converted to
+have 1, 3, or 4 channels.</p></li>
+<li><p><strong>pre_batching_processing</strong> – The operation(s) to apply before the data is put into a batch.</p></li>
+<li><p><strong>batch_size</strong> – Size of the batches of data. Default: 32.
+If <cite>None</cite>, the data will not be batched
+(the dataset will yield individual samples).</p></li>
+<li><p><strong>post_batching_processing</strong> – The operation(s) to apply after tha data has been batched.</p></li>
+<li><p><strong>do_normalization</strong> – If True, normalize the image in the range [0,1].</p></li>
+<li><p><strong>colname_image</strong> – column name for image file. Default: ‘image’.</p></li>
+<li><p><strong>colname_class</strong> – column name for class. Default: ‘class’.</p></li>
+<li><p><strong>colname_box</strong> – column names for box position. Default: [“xmin”, “ymin”, “xmax”, “ymax”].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <cite>tf.data.Dataset</cite> object.</p>
+</dd>
+</dl>
+<p>Rules regarding labels format:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>if <cite>class_mode</cite> is <cite>int</cite>, the labels are an <cite>int32</cite> tensor of shape
+<cite>(batch_size,)</cite>.</p></li>
+<li><p>if <cite>class_mode</cite> is <cite>raw</cite>, the classes are converted.</p></li>
+<li><p>if <cite>class_mode</cite> is <cite>categorical</cite>, the labels are a <cite>float32</cite> tensor
+of shape <cite>(batch_size, num_classes)</cite>, representing a one-hot
+encoding of the class index.</p></li>
+</ul>
+</div></blockquote>
+<p>Rules regarding number of channels in the yielded images:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>if <cite>color_mode</cite> is <cite>grayscale</cite>,
+there’s 1 channel in the image tensors.</p></li>
+<li><p>if <cite>color_mode</cite> is <cite>rgb</cite>,
+there are 3 channels in the image tensors.</p></li>
+<li><p>if <cite>color_mode</cite> is <cite>rgba</cite>,
+there are 4 channels in the image tensors.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
 </section>
 </section>
 
