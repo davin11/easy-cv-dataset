@@ -27,7 +27,7 @@ setup(
     packages=['easy_cv_dataset', 'easy_cv_dataset.layers', 'easy_cv_dataset.metrics'],
     python_requires=">=3.9",
     install_requires=[
-        'keras-cv==0.9.0',
+        'keras>=3.10.0',
         'pandas>=2.0.0',
         'scikit-learn',
         'pillow',

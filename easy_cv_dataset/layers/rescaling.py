@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from keras.src.layers.preprocessing.image_preprocessing import BaseImagePreprocessingLayer 
+from keras.layers import AutoContrast 
 
-class Rescaling(BaseImagePreprocessingLayer):
+class Rescaling(AutoContrast):
     """A preprocessing layer which rescales input values to a new range.
 
     This layer rescales every value of an input (often an image) by multiplying

@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from keras.src.layers.preprocessing.data_layer import DataLayer
-BOUNDING_BOXES = "bounding_boxes"
+from keras.layers import Layer
 
 
-class ToTuple(DataLayer):
+class ToTuple(Layer):
     def __init__(self, dictname_input, dictname_target, max_boxes=None, **kwargs):
         super().__init__(**kwargs, trainable=False, autocast=False)
         self.dictname_input = dictname_input
@@ -27,6 +26,6 @@ class ToTuple(DataLayer):
     def call(self, dat):
         x = dat[self.dictname_input]
         y = dat[self.dictname_target]
-        #if self.dictname_target == BOUNDING_BOXES:
+        #if self.dictname_target == "bounding_boxes":
         #    y = keras_cv.bounding_box.to_dense(y, max_boxes=self.max_boxes)
         return x, y
