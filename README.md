@@ -5,7 +5,7 @@ dataset loading utilities
 
 To install easy-cv-dataset, use the following instruction:
 ```
-pip install git+https://github.com/davin11/easy-cv-dataset keras-cv
+pip install git+https://github.com/davin11/easy-cv-dataset
 ```
 
-This package requareds the package keras-cv==0.9.0
+This package requareds the package keras=>3.10.0
