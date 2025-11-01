@@ -103,15 +103,16 @@
 <span class="sig-prename descclassname"><span class="pre">easy_cv_dataset.</span></span><span class="sig-name descname"><span class="pre">image_dataframe_from_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">follow_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/easy_cv_dataset/image_dataset.html#image_dataframe_from_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#easy_cv_dataset.image_dataframe_from_directory" title="Link to this definition"></a></dt>
 <dd><p>Generates a <cite>pandas.DataFrame</cite> from image files in a directory.</p>
 <p>If your directory structure is:</p>
-<p><code class="docutils literal notranslate"><span class="pre">`</span>
-<span class="pre">main_directory/</span>
-<span class="pre">...class_a/</span>
-<span class="pre">......a_image_1.jpg</span>
-<span class="pre">......a_image_2.jpg</span>
-<span class="pre">...class_b/</span>
-<span class="pre">......b_image_1.jpg</span>
-<span class="pre">......b_image_2.jpg</span>
-<span class="pre">`</span></code></p>
+<dl class="simple">
+<dt>::</dt><dd><p>main_directory/
+…class_a/
+……a_image_1.jpg
+……a_image_2.jpg
+…class_b/
+……b_image_1.jpg
+……b_image_2.jpg</p>
+</dd>
+</dl>
 <p>Then calling <cite>image_dataframe_from_directory(main_directory)</cite> will
 return a <cite>pandas.DataFrame</cite> that yields batches of
 images from the subdirectories <cite>class_a</cite> and <cite>class_b</cite>.</p>
