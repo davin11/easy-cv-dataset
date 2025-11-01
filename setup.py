@@ -24,7 +24,7 @@ setup(
     long_description=README,
     long_description_content_type="text/markdown",
     license="Apache License 2.0",
-    packages=['easy_cv_dataset', 'easy_cv_dataset.layers', 'easy_cv_dataset.metrics'],
+    packages=['easy_cv_dataset', 'easy_cv_dataset.layers', 'easy_cv_dataset.metrics', 'easy_cv_dataset.visualization', ],
     python_requires=">=3.9",
     install_requires=[
         'keras>=3.10.0',
