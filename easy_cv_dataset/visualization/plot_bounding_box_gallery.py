@@ -14,7 +14,7 @@
 
 import functools
 import numpy as np
-from keras.backend import ops
+import keras.backend as ops
 from .plot_image_gallery import to_numpy, transform_value_range, _numpy_plot_image_gallery
 from keras.utils.bounding_boxes import convert_format as convert_boxes_format
 

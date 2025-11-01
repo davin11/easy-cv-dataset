@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from keras.backend import ops
+import keras.backend as ops
 from .plot_image_gallery import to_numpy, transform_value_range, _numpy_plot_image_gallery
 
 

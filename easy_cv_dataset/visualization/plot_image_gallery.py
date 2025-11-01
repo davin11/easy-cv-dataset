@@ -14,7 +14,7 @@
 
 import math
 import numpy as np
-from keras.backend import ops
+import keras.backend as ops
 
 try:
     import matplotlib.pyplot as plt
@@ -38,7 +38,7 @@ def _numpy_plot_image_gallery(
     batch_size = len(images)
     rows = rows or int(math.ceil(math.sqrt(batch_size)))
     cols = cols or int(math.ceil(batch_size // rows))
-    
+
     # Generate subplots
     fig, axes = plt.subplots(
         nrows=rows,
