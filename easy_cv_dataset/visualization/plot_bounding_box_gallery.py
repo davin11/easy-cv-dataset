@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import functools
 import numpy as np
-import keras.backend as ops
 from .plot_image_gallery import to_numpy, transform_value_range, _numpy_plot_image_gallery
 from keras.utils.bounding_boxes import convert_format as convert_boxes_format
 
@@ -42,27 +40,29 @@ def _draw_bounding_boxes(
     text_thickness = text_thickness or line_thickness
     outline_factor = images[0].shape[-2] // 100
     class_mapping = class_mapping or {}
+    if isinstance(class_mapping, list) or isinstance(class_mapping, tuple):
+        class_mapping = dict(enumerate(class_mapping))
     result = list()
 
     for i in range(len(images)):
         image = images[i]
         boxes = bounding_boxes["boxes"][i]
-        classes = bounding_boxes["classes"][i]
+        classes = bounding_boxes["labels"][i]
         if "confidence" in bounding_boxes:
             confidence = bounding_boxes["confidence"][i]
         else:
             confidence = None
 
         
-        for b_id in range(len(bounding_box_batch["boxes"])):
-            x1, y1, x2, y2 = boxes[b_id]
-            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+        for b_id in range(len(boxes)):
             class_id = int(classes[b_id])
-            confid = confidence[b_id] if confidence else None
-
             if class_id < 0:
                 continue
-            
+
+            x1, y1, x2, y2 = boxes[b_id]
+            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+            confid = confidence[b_id] if confidence is not None else None
+
             cv2.rectangle(
                 image,
                 (x1, y1),
@@ -77,12 +77,12 @@ def _draw_bounding_boxes(
                 label = f"{label} | {confid:.2f}"
 
             x, y = _find_text_location(
-                x, y, font_scale, line_thickness, outline_factor
+                x1, y1, font_scale, line_thickness, outline_factor
             )
             cv2.putText(
                 image,
                 label,
-                (x1, y1),
+                (x, y),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 font_scale,
                 (0, 0, 0, 0.5),
@@ -91,7 +91,7 @@ def _draw_bounding_boxes(
             cv2.putText(
                 image,
                 label,
-                (x1, y1),
+                (x, y),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 font_scale,
                 color,
@@ -171,7 +171,7 @@ def plot_bounding_box_gallery(
             y_true, source=bounding_box_format, target="xyxy"
         )
         y_true["boxes"] = to_numpy(y_true["boxes"])
-        y_true["classes"] = to_numpy(y_true["classes"])
+        y_true["labels"] = to_numpy(y_true["labels"])
         plotted_images = _draw_bounding_boxes(
             plotted_images,
             y_true,
@@ -188,7 +188,7 @@ def plot_bounding_box_gallery(
             y_pred, source=bounding_box_format, target="xyxy"
         )
         y_pred["boxes"] = to_numpy(y_pred["boxes"])
-        y_pred["classes"] = to_numpy(y_pred["classes"])
+        y_pred["labels"] = to_numpy(y_pred["labels"])
         plotted_images = _draw_bounding_boxes(
             plotted_images,
             y_pred,

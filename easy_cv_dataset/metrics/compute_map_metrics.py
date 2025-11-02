@@ -52,11 +52,11 @@ def compute_mAP_metrics(
                 k: tf.convert_to_tensor(boxes_pred[k][index_image])
                 for k in boxes_pred
             }
-            target_classes = boxes_gt["classes"][index_image]
+            target_classes = boxes_gt["labels"][index_image]
             target_valid = target_classes != sentinel
-            detection_valid = boxes_pred_image["classes"] != sentinel
+            detection_valid = boxes_pred_image["labels"] != sentinel
             detection_scores = boxes_pred_image["confidence"][detection_valid]
-            detection_classes = tf.cast(boxes_pred_image["classes"][detection_valid],
+            detection_classes = tf.cast(boxes_pred_image["labels"][detection_valid],
                                         target_classes.dtype)
 
             detection_iou = compute_iou(

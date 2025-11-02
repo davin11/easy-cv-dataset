@@ -14,7 +14,8 @@
 
 import math
 import numpy as np
-import keras.backend as ops
+from keras import ops
+from keras import backend
 
 try:
     import matplotlib.pyplot as plt
@@ -36,8 +37,8 @@ def _numpy_plot_image_gallery(
         )
 
     batch_size = len(images)
-    rows = rows or int(math.ceil(math.sqrt(batch_size)))
-    cols = cols or int(math.ceil(batch_size // rows))
+    cols = cols or int(math.ceil(math.sqrt(batch_size)))
+    rows = rows or int(math.ceil(batch_size // cols))
 
     # Generate subplots
     fig, axes = plt.subplots(
@@ -75,11 +76,12 @@ def _numpy_plot_image_gallery(
 def to_numpy(x):
     if x is None:
         return None
-    x = ops.convert_to_numpy(x)
+    if not isinstance(x, np.ndarray):
+        x = x.numpy()
     # Important for consistency when working with visualization utilities
     return np.ascontiguousarray(x)
 
-def transform_value_range(x, original_range, target_range, dtype=ops.float32):
+def transform_value_range(x, original_range, target_range, dtype=backend.floatx()):
 
     if (original_range[0] == target_range[0]) and (original_range[1] == target_range[1]):
         return x

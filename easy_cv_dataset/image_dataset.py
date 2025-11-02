@@ -463,7 +463,7 @@ def _get_objdetect_generator(
             IMAGES: image,
             BOUNDING_BOXES: {
                 "boxes": tf.cast(sel[colname_box].values, "float32"),
-                "classes": _get_fun_load_class(sel[colname_class].values, class_mode=class_mode, num_classes=num_classes),
+                "labels": _get_fun_load_class(sel[colname_class].values, class_mode=class_mode, num_classes=num_classes),
             },
         }
 
@@ -631,7 +631,7 @@ def image_objdetect_dataset_from_dataframe(
             IMAGES: tf.TensorSpec(shape=(), dtype="string"),
             BOUNDING_BOXES: {
                 "boxes": tf.TensorSpec(shape=(None, 4), dtype="float32"),
-                "classes": tf.TensorSpec(shape=class_shape, dtype=class_dtype),
+                "labels": tf.TensorSpec(shape=class_shape, dtype=class_dtype),
             },
         },
     )

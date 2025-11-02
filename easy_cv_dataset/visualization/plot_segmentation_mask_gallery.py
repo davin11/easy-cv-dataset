@@ -13,19 +13,19 @@
 # limitations under the License.
 
 import numpy as np
-import keras.backend as ops
+from keras import ops
 from .plot_image_gallery import to_numpy, transform_value_range, _numpy_plot_image_gallery
 
 
-def reshape_masks(segmentation_masks):
-    rank = len(ops.ops(segmentation_masks))
-    if (rank == 4) and (segmentation_masks.shape[-1] != 1):
-        segmentation_masks = ops.argmax(segmentation_masks, axis=-1)
-    rank = len(ops.ops(segmentation_masks))
-    if rank == 3:
-        segmentation_masks = segmentation_masks[..., None]
+def _reshape_masks(x):
+    shape = tuple(x.shape)
+    if (len(shape) == 4) and (shape[-1] != 1):
+        x = ops.argmax(x, axis=-1)
+        shape = tuple(x.shape)
+    if len(shape) == 3:
+        x = x[..., None]
 
-    return segmentation_masks.repeat(repeats=3, axis=-1)
+    return ops.concatenate((x,x,x), axis=-1)
 
 
 def plot_segmentation_mask_gallery(
@@ -70,23 +70,17 @@ def plot_segmentation_mask_gallery(
     masks_to_contatenate = [images, ]
 
     if y_true is not None:
-        plotted_y_true = reshape_masks(
-            segmentation_masks=y_true,
-            num_classes=num_classes,
-        )
+        plotted_y_true = _reshape_masks(y_true)
         plotted_y_true = transform_value_range(plotted_y_true, (0, num_classes-1), (0, 255))
         plotted_y_true = to_numpy(plotted_y_true).astype("uint8")
         masks_to_contatenate.append(plotted_y_true)
     if y_pred is not None:
-        plotted_y_pred = reshape_masks(
-            segmentation_masks=y_pred,
-            num_classes=num_classes,
-        )
+        plotted_y_pred = _reshape_masks(y_pred)
         plotted_y_pred = transform_value_range(plotted_y_pred, (0, num_classes-1), (0, 255))
         plotted_y_pred = to_numpy(plotted_y_pred).astype("uint8")
         masks_to_contatenate.append(plotted_y_pred)
 
     # Concatenate the images and the masks together.
-    plotted_images = np.concatenate(masks_to_contatenate, axis=-1)
+    plotted_images = np.concatenate(masks_to_contatenate, axis=-2)
 
     return _numpy_plot_image_gallery(images=plotted_images, rows=rows, cols=cols, **kwargs)
