@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>easy_cv_dataset.metrics.objdet_metrics &mdash; easy-cv-dataset 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            easy-cv-dataset
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">easy-cv-dataset</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">easy_cv_dataset.metrics.objdet_metrics</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for easy_cv_dataset.metrics.objdet_metrics</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keras</span><span class="w"> </span><span class="kn">import</span> <span class="n">ops</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.non_max_supression</span><span class="w"> </span><span class="kn">import</span> <span class="n">NonMaxSuppression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">keras.utils.bounding_boxes</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_iou</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">one_hot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ops</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">ops</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+    <span class="p">),</span> <span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EvaluateMAPmetricsCallback">
+<a class="viewcode-back" href="../../../api/metrics.html#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EvaluateMAPmetricsCallback</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">iou_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;val&#39;</span><span class="p">,</span> <span class="n">num_thresholds</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">AUC</span><span class="p">(</span>
+            <span class="n">from_logits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+            <span class="n">multi_label</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">num_thresholds</span><span class="o">=</span><span class="n">num_thresholds</span><span class="p">,</span>
+            <span class="n">curve</span><span class="o">=</span><span class="s2">&quot;PR&quot;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;mAP&#39;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">iou_threshold</span> <span class="o">=</span> <span class="n">iou_threshold</span>
+
+<div class="viewcode-block" id="EvaluateMAPmetricsCallback.set_model">
+<a class="viewcode-back" href="../../../api/metrics.html#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback.set_model">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prediction_decoder</span> <span class="o">=</span> <span class="n">NonMaxSuppression</span><span class="p">(</span>
+            <span class="n">bounding_box_format</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prediction_decoder</span><span class="o">.</span><span class="n">bounding_box_format</span><span class="p">,</span>
+            <span class="n">from_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prediction_decoder</span><span class="o">.</span><span class="n">from_logits</span><span class="p">,</span>
+            <span class="n">iou_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prediction_decoder</span><span class="o">.</span><span class="n">iou_threshold</span><span class="p">,</span>
+            <span class="n">confidence_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prediction_decoder</span><span class="o">.</span><span class="n">confidence_threshold</span><span class="p">,</span>
+            <span class="n">max_detections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prediction_decoder</span><span class="o">.</span><span class="n">max_detections</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">bounding_box_format</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prediction_decoder</span><span class="o">.</span><span class="n">bounding_box_format</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">compute_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fun_compute_metrics</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fun_compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_compile_metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">box_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="p">[</span><span class="s2">&quot;bbox_regression&quot;</span><span class="p">]</span>
+            <span class="n">cls_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="p">[</span><span class="s2">&quot;cls_logits&quot;</span><span class="p">]</span>
+            <span class="n">num_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">num_classes</span>
+            <span class="n">iou_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_compile_metrics</span><span class="o">.</span><span class="n">iou_threshold</span>
+
+            <span class="c1"># box_pred is on &quot;center_yxhw&quot; format, convert to target format.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">images</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">images</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">channels</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">images</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">anchor_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">anchor_generator</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+            <span class="n">anchor_boxes</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">anchor_boxes</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">box_pred</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">bounding_boxes</span><span class="o">.</span><span class="n">decode_deltas_to_boxes</span><span class="p">(</span>
+                <span class="n">anchors</span><span class="o">=</span><span class="n">anchor_boxes</span><span class="p">,</span>
+                <span class="n">boxes_delta</span><span class="o">=</span><span class="n">box_pred</span><span class="p">,</span>
+                <span class="n">encoded_format</span><span class="o">=</span><span class="s2">&quot;center_xywh&quot;</span><span class="p">,</span>
+                <span class="n">anchor_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">anchor_generator</span><span class="o">.</span><span class="n">bounding_box_format</span><span class="p">,</span>
+                <span class="n">box_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">bounding_box_format</span><span class="p">,</span>
+                <span class="n">image_shape</span><span class="o">=</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">channels</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prediction_decoder</span><span class="p">(</span><span class="n">box_pred</span><span class="p">,</span> <span class="n">cls_pred</span><span class="p">,</span> <span class="n">images</span><span class="o">=</span><span class="n">images</span><span class="p">,</span> <span class="n">flag_confidence_threshold</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">y_true</span> <span class="o">=</span> <span class="n">y</span>
+
+            <span class="c1"># predicted classes</span>
+            <span class="n">class_pred</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">y_pred</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">],</span> <span class="n">num_classes</span><span class="p">)</span> <span class="o">*</span> <span class="n">y_pred</span><span class="p">[</span><span class="s1">&#39;confidence&#39;</span><span class="p">][:,:,</span><span class="kc">None</span><span class="p">]</span> <span class="c1"># B X Np X C</span>
+        
+            <span class="c1"># matching boxes # B X Np X Nt</span>
+            <span class="n">detect</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">compute_iou</span><span class="p">(</span>
+                    <span class="n">y_pred</span><span class="p">[</span><span class="s1">&#39;boxes&#39;</span><span class="p">],</span>
+                    <span class="n">y_true</span><span class="p">[</span><span class="s1">&#39;boxes&#39;</span><span class="p">],</span>
+                    <span class="n">bounding_box_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">bounding_box_format</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">&gt;=</span> <span class="n">iou_threshold</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">y_pred</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">][:,:,</span><span class="kc">None</span><span class="p">],</span> <span class="n">y_true</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">][:,</span><span class="kc">None</span><span class="p">,:]))</span>
+
+            <span class="c1"># detect missing boxes</span>
+            <span class="n">missed_boxes</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">detect</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="kc">False</span>
+            <span class="n">missed_boxes</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">missed_boxes</span><span class="p">,</span> <span class="n">y_true</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">missed_boxes</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">missed_boxes</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span>
+            <span class="c1">#print(&#39;missed_boxes:&#39;, missed_boxes)</span>
+        
+            <span class="c1"># take only the detection with max score</span>
+            <span class="n">mask_other</span> <span class="o">=</span> <span class="n">y_pred</span><span class="p">[</span><span class="s1">&#39;confidence&#39;</span><span class="p">][:,:,</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="n">detect</span>  <span class="c1"># B X Np X Nt</span>
+            <span class="n">mask_other</span> <span class="o">=</span> <span class="n">mask_other</span><span class="o">==</span><span class="n">ops</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">mask_other</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">detect</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">detect</span><span class="p">,</span> <span class="n">mask_other</span><span class="p">)</span>
+            <span class="c1">#print(&#39;detect:&#39;, detect)</span>
+
+            <span class="c1"># convert detection to labeling</span>
+            <span class="n">class_true</span> <span class="o">=</span> <span class="n">one_hot</span><span class="p">(</span><span class="n">y_true</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">],</span> <span class="n">num_classes</span><span class="p">)</span>
+            <span class="n">class_true</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">ops</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">detect</span><span class="p">,</span> <span class="n">class_true</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span> <span class="n">class_true</span><span class="p">)</span>
+            <span class="c1">#print(&#39;class_true:&#39;, class_true)</span>
+
+            <span class="n">class_true</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">class_true</span><span class="p">,</span> <span class="n">missed_boxes</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
+            <span class="n">class_pred</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">class_pred</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">missed_boxes</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">class_true</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">class_true</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">))</span>
+            <span class="n">class_pred</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">class_pred</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_compile_metrics</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">class_true</span><span class="p">,</span> <span class="n">class_pred</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_metrics_result</span><span class="p">()</span>
+
+<div class="viewcode-block" id="EvaluateMAPmetricsCallback.evaluate">
+<a class="viewcode-back" href="../../../api/metrics.html#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback.evaluate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">old_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_compile_metrics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_compile_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_compile_metrics</span> <span class="o">=</span> <span class="n">old_metrics</span>
+        <span class="n">ap</span> <span class="o">=</span> <span class="n">interpolate_pr_each_classes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;class_names&quot;</span><span class="p">):</span>
+            <span class="n">class_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">class_names</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">class_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">num_classes</span><span class="p">))</span>
+        <span class="n">ap</span> <span class="o">=</span> <span class="p">{</span><span class="n">class_names</span><span class="p">[</span><span class="n">index</span><span class="p">]:</span> <span class="n">ap</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ap</span><span class="p">))}</span>
+        <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">ap</span></div>
+
+    
+<div class="viewcode-block" id="EvaluateMAPmetricsCallback.on_epoch_end">
+<a class="viewcode-back" href="../../../api/metrics.html#easy_cv_dataset.metrics.EvaluateMAPmetricsCallback.on_epoch_end">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">):</span>
+        <span class="n">results</span><span class="p">,</span> <span class="n">ap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">logs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ap</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; AP of </span><span class="si">%20s</span><span class="s2"> = </span><span class="si">%7.5f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">ap</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
+        
+        <span class="k">return</span> <span class="n">logs</span></div>
+</div>
+
+
+<div class="viewcode-block" id="compute_mAP_metrics">
+<a class="viewcode-back" href="../../../api/metrics.html#easy_cv_dataset.metrics.compute_mAP_metrics">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_mAP_metrics</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">iou_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_thresholds</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">):</span>
+    <span class="n">fun</span> <span class="o">=</span> <span class="n">EvaluateMAPmetricsCallback</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">iou_threshold</span><span class="o">=</span><span class="n">iou_threshold</span><span class="p">,</span> <span class="n">num_thresholds</span><span class="o">=</span><span class="n">num_thresholds</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">)</span>
+    <span class="n">fun</span><span class="o">.</span><span class="n">set_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">results</span><span class="p">,</span> <span class="n">ap</span> <span class="o">=</span> <span class="n">fun</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ap</span><span class="p">:</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;AP_</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">ap</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">interpolate_pr_each_classes</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Interpolation formula inspired by section 4 of Davis &amp; Goadrich 2006.</span>
+
+<span class="sd">    https://www.biostat.wisc.edu/~page/rocpr.pdf</span>
+
+<span class="sd">    Note here we derive &amp; use a closed formula not present in the paper</span>
+<span class="sd">    as follows:</span>
+
+<span class="sd">        Precision = TP / (TP + FP) = TP / P</span>
+
+<span class="sd">    Modeling all of TP (true positive), FP (false positive) and their sum</span>
+<span class="sd">    P = TP + FP (predicted positive) as varying linearly within each</span>
+<span class="sd">    interval [A, B] between successive thresholds, we get</span>
+
+<span class="sd">        Precision slope = dTP / dP</span>
+<span class="sd">                        = (TP_B - TP_A) / (P_B - P_A)</span>
+<span class="sd">                        = (TP - TP_A) / (P - P_A)</span>
+<span class="sd">        Precision = (TP_A + slope * (P - P_A)) / P</span>
+
+<span class="sd">    The area within the interval is (slope / total_pos_weight) times</span>
+
+<span class="sd">        int_A^B{Precision.dP} = int_A^B{(TP_A + slope * (P - P_A)) * dP / P}</span>
+<span class="sd">        int_A^B{Precision.dP} = int_A^B{slope * dP + intercept * dP / P}</span>
+
+<span class="sd">    where intercept = TP_A - slope * P_A = TP_B - slope * P_B, resulting in</span>
+
+<span class="sd">        int_A^B{Precision.dP} = TP_B - TP_A + intercept * log(P_B / P_A)</span>
+
+<span class="sd">    Bringing back the factor (slope / total_pos_weight) we&#39;d put aside, we</span>
+<span class="sd">    get</span>
+
+<span class="sd">        slope * [dTP + intercept *  log(P_B / P_A)] / total_pos_weight</span>
+
+<span class="sd">    where dTP == TP_B - TP_A.</span>
+
+<span class="sd">    Note that when P_A == 0 the above calculation simplifies into</span>
+
+<span class="sd">        int_A^B{Precision.dTP} = int_A^B{slope * dTP}</span>
+<span class="sd">                                = slope * (TP_B - TP_A)</span>
+
+<span class="sd">    which is really equivalent to imputing constant precision throughout the</span>
+<span class="sd">    first bucket having &gt;0 true positives.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        pr_auc: an approximation of the area under the P-R curve for each classes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dtp</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span>
+        <span class="n">metric</span><span class="o">.</span><span class="n">true_positives</span><span class="p">[:</span> <span class="n">metric</span><span class="o">.</span><span class="n">num_thresholds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">metric</span><span class="o">.</span><span class="n">true_positives</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+    <span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">metric</span><span class="o">.</span><span class="n">true_positives</span><span class="p">,</span> <span class="n">metric</span><span class="o">.</span><span class="n">false_positives</span><span class="p">)</span>
+    <span class="n">dp</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">p</span><span class="p">[:</span> <span class="n">metric</span><span class="o">.</span><span class="n">num_thresholds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">prec_slope</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">divide_no_nan</span><span class="p">(</span><span class="n">dtp</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">dp</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">intercept</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span>
+        <span class="n">metric</span><span class="o">.</span><span class="n">true_positives</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">ops</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">prec_slope</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="p">)</span>
+
+    <span class="n">safe_p_ratio</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">p</span><span class="p">[:</span> <span class="n">metric</span><span class="o">.</span><span class="n">num_thresholds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">divide_no_nan</span><span class="p">(</span>
+            <span class="n">p</span><span class="p">[:</span> <span class="n">metric</span><span class="o">.</span><span class="n">num_thresholds</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">ops</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span>
+    <span class="p">)</span>
+
+    <span class="n">pr_auc_increment</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">divide_no_nan</span><span class="p">(</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span>
+            <span class="n">prec_slope</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">ops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dtp</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">intercept</span><span class="p">,</span> <span class="n">ops</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">safe_p_ratio</span><span class="p">)))),</span>
+        <span class="p">),</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+            <span class="n">ops</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">metric</span><span class="o">.</span><span class="n">true_positives</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">metric</span><span class="o">.</span><span class="n">false_negatives</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span> <span class="mi">0</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ops</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pr_auc_increment</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Davide Cozzolino.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
