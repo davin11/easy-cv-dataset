@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .compute_map_metrics import EvaluateMAPmetricsCallback
-from .compute_map_metrics import compute_mAP_metrics
+from .objdet_metrics import EvaluateMAPmetricsCallback
+from .objdet_metrics import compute_mAP_metrics
