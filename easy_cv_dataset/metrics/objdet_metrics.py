@@ -100,7 +100,12 @@ class EvaluateMAPmetricsCallback(keras.callbacks.Callback):
     def evaluate(self, verbose=True):
         old_metrics = self.model._compile_metrics
         self.model._compile_metrics = self.metric
-        results = self.model.evaluate(self.data, verbose=verbose, return_dict=True)
+        try:
+            results = self.model.evaluate(self.data, verbose=verbose, return_dict=True)
+        except:
+            self.model._compile_metrics = old_metrics
+            raise
+        
         self.model._compile_metrics = old_metrics
         ap = interpolate_pr_each_classes(self.metric)
         if hasattr(self.data, "class_names"):

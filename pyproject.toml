@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=74.1.3", ]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "easy-cv-dataset"
+dynamic = ["version"]
+description = "A library to make dataset loading in Keras easy"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+authors = [
+    { name = "davin11", email = "davide.cozzolino@unina.it" }
+]
+maintainers = [
+    { name = "davin11", email = "davide.cozzolino@unina.it" }
+]
+dependencies = [
+    "keras>=3.10.0",
+    "pandas>=2.0.0",
+    "pillow"
+]
+
+[project.urls]
+Homepage = "https://github.com/davin11/easy-cv-dataset"
+Documentation = "https://davin11.github.io/easy-cv-dataset"
+Repository = "https://github.com/davin11/easy-cv-dataset.git"
+Issues = "https://github.com/davin11/easy-cv-dataset/issues"
+
+[tool.setuptools]
+packages = [
+    "easy_cv_dataset",
+    "easy_cv_dataset.layers",
+    "easy_cv_dataset.metrics",
+    "easy_cv_dataset.visualization",
+]

@@ -13,12 +13,10 @@
 # limitations under the License.
 
 """
-easy_cv_dataset.
-
-A library for dataset loading.
+easy_cv_dataset is a library to make dataset loading in Keras **easy**.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from .image_dataset import image_dataframe_from_directory
 from .image_dataset import image_classification_dataset_from_dataframe

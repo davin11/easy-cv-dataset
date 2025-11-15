@@ -17,7 +17,7 @@ def get_version(rel_path):
 setup(
     name='easy-cv-dataset',
     version=get_version("easy_cv_dataset/__init__.py"),
-    description='A library for dataset loading',
+    description='A library to make dataset loading in Keras easy',
     url='https://github.com/davin11/easy-cv-dataset',
     author='davin11',
     author_email='davide.cozzolino@unina.it',
@@ -29,7 +29,6 @@ setup(
     install_requires=[
         'keras>=3.10.0',
         'pandas>=2.0.0',
-        'scikit-learn',
         'pillow',
     ],
     classifiers=[
@@ -39,9 +38,6 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3 :: Only",
-        "Operating System :: Unix",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: MacOS",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering",
         "Topic :: Software Development",
