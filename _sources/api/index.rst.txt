@@ -7,5 +7,6 @@ API Reference
    :maxdepth: 1
 
    image
+   visualization
    metrics
 
