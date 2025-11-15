@@ -8,6 +8,7 @@
 import os
 import sys
 import inspect
+from importlib import import_module
 import easy_cv_dataset
 
 project = 'easy-cv-dataset'
@@ -41,14 +42,14 @@ html_copy_source = False
 
 linkcode_revision = "main"
 linkcode_url = "https://github.com/davin11/easy-cv-dataset/blob/" \
-               + linkcode_revision + "/{filepath}#L{linestart}-L{linestop}"
+               + linkcode_revision + "/easy_cv_dataset/{filepath}#L{linestart}-L{linestop}"
 
 
 def linkcode_resolve(domain, info):
     if domain != 'py' or not info['module']:
         return None
 
-    mod = __import__(info['module'])
+    mod = import_module(info['module'])
     if mod is None:
         return None
 
