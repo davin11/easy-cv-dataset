@@ -1,7 +1,7 @@
 Installation
 ============
 
-To install it, use the following instruction::
+To install easy-cv-dataset, use the following instruction::
 
     pip install git+https://github.com/davin11/easy-cv-dataset
 

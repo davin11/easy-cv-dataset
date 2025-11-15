@@ -3,20 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to easy-cv-dataset's documentation!
-===========================================
+easy-cv-dataset
+===============
 
 .. automodule:: easy_cv_dataset
+
+For the full source code, visit the
+`GitHub repository <https://github.com/davin11/easy-cv-dataset>`_.
+This library is based on keras=>3.10.0
 
 .. toctree::
    :maxdepth: 1
 
+   install
+   examples
    api/index
 
 
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
+
+
 

@@ -1,4 +1,4 @@
-Note Examples
+Notebook Examples
 =============
 
 1. **Classification Finetuning**:
