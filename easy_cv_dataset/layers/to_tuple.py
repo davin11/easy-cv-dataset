@@ -13,22 +13,30 @@
 # limitations under the License.
 
 from keras.layers import Layer
+from keras import ops
+try:
+    from tensorflow import RaggedTensor
+except:
+    RaggedTensor = None
+
 
 def boses_to_dense(bounding_boxes, max_boxes, default_value=-1):
-    try:
-        from tensorflow import RaggedTensor
-    except:
-        return bounding_boxes
     out_bounding_boxes = dict()
     for key in bounding_boxes.keys():
-        if isinstance(bounding_boxes[key], RaggedTensor):
-            data_shape = bounding_boxes[key].shape
+        if (RaggedTensor is not None) and isinstance(bounding_boxes[key], RaggedTensor):
+            data_shape = ops.shape(bounding_boxes[key])
             out_bounding_boxes[key] = bounding_boxes[key].to_tensor(
                 default_value=default_value,
-                shape=[data_shape[0], max_boxes] + data_shape[2:],
+                shape=[data_shape[0], max_boxes, *data_shape[2:]],
             )
         else:
-            out_bounding_boxes[key] = bounding_boxes[key]
+            x = bounding_boxes[key][:,:max_boxes,...]
+            data_shape = ops.shape(x)
+            x = ops.concatenate([
+                x,
+                ops.full([data_shape[0], max_boxes-data_shape[1], *data_shape[2:]], default_value, dtype=x.dtype)
+            ], 1)
+            out_bounding_boxes[key] = x
         
     return out_bounding_boxes
 
