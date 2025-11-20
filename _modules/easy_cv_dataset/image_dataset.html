@@ -96,7 +96,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataframe_from_directory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataset_from_dataframe</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToTuple</span><span class="p">,</span> <span class="n">Rescaling</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToTuple</span><span class="p">,</span> <span class="n">Rescaling</span><span class="p">,</span> <span class="n">BoxesDense</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">keras.utils.bounding_boxes</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_format</span> <span class="k">as</span> <span class="n">convert_boxes_format</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span>
 
@@ -682,12 +682,18 @@
         <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">max_boxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pre_batching_processing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pre_batching_processing</span> <span class="o">=</span> <span class="n">BoxesDense</span><span class="p">(</span><span class="n">max_boxes</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pre_batching_processing</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="n">pre_batching_processing</span><span class="p">,</span> <span class="n">BoxesDense</span><span class="p">(</span><span class="n">max_boxes</span><span class="p">)])</span>
+
     <span class="n">post_batching_processing</span> <span class="o">=</span> <span class="n">_update_post_batching_processing</span><span class="p">(</span>
         <span class="n">post_batching_processing</span><span class="o">=</span><span class="n">post_batching_processing</span><span class="p">,</span>
         <span class="n">do_normalization</span><span class="o">=</span><span class="n">do_normalization</span><span class="p">,</span>
         <span class="n">dictname_input</span><span class="o">=</span><span class="n">IMAGES</span><span class="p">,</span>
         <span class="n">dictname_target</span><span class="o">=</span><span class="n">BOUNDING_BOXES</span><span class="p">,</span>
-        <span class="n">max_boxes</span><span class="o">=</span><span class="n">max_boxes</span><span class="p">)</span>
+        <span class="n">max_boxes</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
