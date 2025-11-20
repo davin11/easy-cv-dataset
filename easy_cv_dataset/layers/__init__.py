@@ -14,4 +14,6 @@
 
 from .to_tuple import ToTuple
 from .rescaling import Rescaling
+from .to_tuple import BoxesDense
+
 #from .random_affine_transf import RandomAffineTransf

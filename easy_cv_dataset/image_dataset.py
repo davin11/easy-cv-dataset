@@ -24,7 +24,7 @@ from PIL import Image
 import keras
 from .utils import dataframe_from_directory
 from .utils import dataset_from_dataframe
-from .layers import ToTuple, Rescaling
+from .layers import ToTuple, Rescaling, BoxesDense
 from keras.utils.bounding_boxes import convert_format as convert_boxes_format
 from keras.layers import Pipeline
 
@@ -599,12 +599,18 @@ def image_objdetect_dataset_from_dataframe(
         dtype="float32",
     )
 
+    if max_boxes is not None:
+        if pre_batching_processing is None:
+            pre_batching_processing = BoxesDense(max_boxes)
+        else:
+            pre_batching_processing = Pipeline(layers=[pre_batching_processing, BoxesDense(max_boxes)])
+
     post_batching_processing = _update_post_batching_processing(
         post_batching_processing=post_batching_processing,
         do_normalization=do_normalization,
         dictname_input=IMAGES,
         dictname_target=BOUNDING_BOXES,
-        max_boxes=max_boxes)
+        max_boxes=None)
 
     if shuffle:
         if seed is None:

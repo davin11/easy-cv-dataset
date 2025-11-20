@@ -264,7 +264,7 @@ def dataset_from_dataframe(
         )
 
     if batch_size is not None:
-        dataset = dataset.ragged_batch(batch_size)
+        dataset = dataset.batch(batch_size)
 
     if post_batching_operation is not None:
         dataset = dataset.map(
